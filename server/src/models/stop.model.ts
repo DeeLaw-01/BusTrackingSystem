@@ -30,6 +30,10 @@ const stopSchema = new Schema<IStopDocument>(
       ref: 'Route',
       required: true,
     },
+    estimatedArrivalTime: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

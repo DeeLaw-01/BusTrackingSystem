@@ -65,8 +65,7 @@ export const authApi = {
   resetPassword: (data: { email: string; otp: string; newPassword: string }) =>
     api.post('/auth/reset-password', data),
   // Invitation validation (public)
-  validateInvitation: (token: string) =>
-    api.get(`/auth/invitations/${token}`),
+  validateInvitation: (token: string) => api.get(`/auth/invitations/${token}`),
   // Me
   getMe: () => api.get('/auth/me')
 }
@@ -92,7 +91,12 @@ export const routesApi = {
     id: string,
     data: { name?: string; description?: string; isActive?: boolean }
   ) => api.patch(`/routes/${id}`, data),
-  delete: (id: string) => api.delete(`/routes/${id}`)
+  delete: (id: string) => api.delete(`/routes/${id}`),
+  // Route builder
+  canEdit: (id: string) => api.get(`/routes/${id}/can-edit`),
+  generatePath: (id: string) => api.post(`/routes/${id}/generate-path`),
+  reverseGeocode: (lat: number, lng: number) =>
+    api.get('/routes/geocode/reverse', { params: { lat, lng } })
 }
 
 // Stops API
@@ -113,6 +117,7 @@ export const stopsApi = {
       latitude?: number
       longitude?: number
       sequence?: number
+      estimatedArrivalTime?: string
     }
   ) => api.patch(`/stops/${id}`, data),
   delete: (id: string) => api.delete(`/stops/${id}`),
@@ -202,7 +207,8 @@ export const adminApi = {
     api.patch(`/admin/users/${id}/role`, { role }),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
   // Invitations
-  createInvitation: (email: string) => api.post('/admin/invitations', { email }),
+  createInvitation: (email: string) =>
+    api.post('/admin/invitations', { email }),
   createBatchInvitations: (emails: string[]) =>
     api.post('/admin/invitations/batch', { emails }),
   listInvitations: (params?: {

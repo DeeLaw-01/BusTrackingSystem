@@ -30,6 +30,7 @@ import ManageUsers from '@/pages/admin/ManageUsers'
 import ManageInvitations from '@/pages/admin/ManageInvitations'
 import ManageRoles from '@/pages/admin/ManageRoles'
 import ManageRoutes from '@/pages/admin/ManageRoutes'
+import RouteBuilder from '@/pages/admin/RouteBuilder'
 import ManageBuses from '@/pages/admin/ManageBuses'
 
 // Driver layout wrapper (reuses the old AppLayout for drivers)
@@ -176,6 +177,7 @@ export default function App () {
         <Route path='/admin/invitations' element={<ManageInvitations />} />
         <Route path='/admin/roles' element={<ManageRoles />} />
         <Route path='/admin/routes' element={<ManageRoutes />} />
+        <Route path='/admin/routes/builder/:id' element={<RouteBuilder />} />
         <Route path='/admin/buses' element={<ManageBuses />} />
       </Route>
 

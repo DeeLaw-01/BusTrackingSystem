@@ -29,6 +29,7 @@ router.post(
     body('longitude').isFloat({ min: -180, max: 180 }).withMessage('Valid longitude is required'),
     body('sequence').isInt({ min: 0 }).withMessage('Sequence must be a positive integer'),
     body('routeId').isMongoId().withMessage('Valid route ID is required'),
+    body('estimatedArrivalTime').optional().trim(),
   ]),
   createStop
 );
@@ -42,6 +43,7 @@ router.patch(
     body('latitude').optional().isFloat({ min: -90, max: 90 }),
     body('longitude').optional().isFloat({ min: -180, max: 180 }),
     body('sequence').optional().isInt({ min: 0 }),
+    body('estimatedArrivalTime').optional().trim(),
   ]),
   updateStop
 );

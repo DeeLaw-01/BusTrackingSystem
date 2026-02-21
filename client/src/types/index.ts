@@ -33,6 +33,7 @@ export interface Stop {
   longitude: number;
   sequence: number;
   routeId: string;
+  estimatedArrivalTime?: string;
 }
 
 export interface Route {
@@ -40,6 +41,7 @@ export interface Route {
   name: string;
   description?: string;
   stops: Stop[];
+  path?: [number, number][];
   isActive: boolean;
 }
 

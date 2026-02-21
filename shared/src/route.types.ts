@@ -5,6 +5,7 @@ export interface IStop {
   longitude: number;
   sequence: number;
   routeId: string;
+  estimatedArrivalTime?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +16,7 @@ export interface IStopCreate {
   longitude: number;
   sequence: number;
   routeId: string;
+  estimatedArrivalTime?: string;
 }
 
 export interface IRoute {
@@ -22,6 +24,7 @@ export interface IRoute {
   name: string;
   description?: string;
   stops: IStop[];
+  path?: [number, number][];
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

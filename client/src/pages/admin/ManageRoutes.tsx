@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Route as RouteIcon, 
   Plus, 
   Edit, 
   Trash2, 
-  MapPin,
   Loader2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Map
 } from 'lucide-react';
 import { routesApi, stopsApi } from '@/services/api'
 import type { Route, Stop } from '@/types'
 
 export default function ManageRoutes() {
+  const navigate = useNavigate();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedRoute, setExpandedRoute] = useState<string | null>(null);
@@ -116,6 +118,16 @@ export default function ManageRoutes() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/admin/routes/builder/${route._id}`);
+                    }}
+                    className="p-2 text-primary-400 hover:text-primary-300 hover:bg-primary-600/10 rounded-lg"
+                    title="Open Route Builder"
+                  >
+                    <Map className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

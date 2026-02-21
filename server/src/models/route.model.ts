@@ -17,6 +17,10 @@ const routeSchema = new Schema<IRouteDocument>(
       type: String,
       trim: true,
     },
+    path: {
+      type: [[Number]],
+      default: undefined,
+    },
     isActive: {
       type: Boolean,
       default: true,

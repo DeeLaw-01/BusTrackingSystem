@@ -9,11 +9,17 @@ import {
   createRoute,
   updateRoute,
   deleteRoute,
+  canEditRoute,
+  generateRoutePath,
+  reverseGeocode,
 } from '../controllers/route.controller';
 import { validate } from '../middleware/validation.middleware';
 import { authenticate, requireAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
+
+// Reverse geocode — must be before /:id to avoid param matching
+router.get('/geocode/reverse', authenticate, requireAdmin, reverseGeocode);
 
 // Public routes (still require auth for security)
 router.get('/', authenticate, getAllRoutes);
@@ -46,5 +52,9 @@ router.patch(
 );
 
 router.delete('/:id', authenticate, requireAdmin, deleteRoute);
+
+// Route builder endpoints
+router.get('/:id/can-edit', authenticate, requireAdmin, canEditRoute);
+router.post('/:id/generate-path', authenticate, requireAdmin, generateRoutePath);
 
 export default router;

@@ -42,7 +42,7 @@ export const getStopById = async (req: Request, res: Response): Promise<void> =>
 
 export const createStop = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, latitude, longitude, sequence, routeId } = req.body;
+    const { name, latitude, longitude, sequence, routeId, estimatedArrivalTime } = req.body;
 
     const stop = await Stop.create({
       name,
@@ -50,6 +50,7 @@ export const createStop = async (req: Request, res: Response): Promise<void> => 
       longitude,
       sequence,
       routeId,
+      ...(estimatedArrivalTime && { estimatedArrivalTime }),
     });
 
     res.status(201).json({ success: true, data: stop });
@@ -62,11 +63,18 @@ export const createStop = async (req: Request, res: Response): Promise<void> => 
 export const updateStop = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, latitude, longitude, sequence } = req.body;
+    const { name, latitude, longitude, sequence, estimatedArrivalTime } = req.body;
+
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (latitude !== undefined) updateData.latitude = latitude;
+    if (longitude !== undefined) updateData.longitude = longitude;
+    if (sequence !== undefined) updateData.sequence = sequence;
+    if (estimatedArrivalTime !== undefined) updateData.estimatedArrivalTime = estimatedArrivalTime;
 
     const stop = await Stop.findByIdAndUpdate(
       id,
-      { name, latitude, longitude, sequence },
+      updateData,
       { new: true, runValidators: true }
     );
 
