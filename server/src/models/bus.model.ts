@@ -45,7 +45,7 @@ const busSchema = new Schema<IBusDocument>(
 );
 
 // Indexes
-busSchema.index({ plateNumber: 1 });
+// Note: plateNumber already has unique: true which creates an index automatically
 busSchema.index({ routeId: 1 });
 busSchema.index({ driverId: 1 });
 busSchema.index({ isActive: 1 });

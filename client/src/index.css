@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,11 +7,11 @@
 @layer base {
   body {
     @apply bg-slate-950 text-slate-100 antialiased;
-    font-family: 'Outfit', system-ui, sans-serif;
+    font-family: 'Poppins', system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: 'Poppins', system-ui, sans-serif;
   }
 }
 
@@ -35,11 +37,55 @@
     @apply bg-red-600 text-white hover:bg-red-700;
   }
 
+  /* Auth page specific button - using direct CSS for coral color */
+  .btn-coral {
+    background-color: #f95f5f;
+    color: white;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    border-radius: 9999px;
+    box-shadow: 0 10px 15px -3px rgba(249, 95, 95, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-coral:hover {
+    background-color: #e64545;
+    box-shadow: 0 10px 20px -3px rgba(249, 95, 95, 0.5);
+    transform: scale(1.02);
+  }
+  
+  .btn-coral:active {
+    background-color: #c23636;
+  }
+  
+  .btn-coral:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
   .input {
     @apply w-full px-4 py-3 bg-slate-900 border border-slate-700 
            rounded-lg text-slate-100 placeholder-slate-500
            focus:outline-none focus:ring-2 focus:ring-primary-500 
            focus:border-transparent transition-all;
+  }
+
+  /* Auth page input style */
+  .input-auth {
+    @apply w-full px-4 py-3 bg-gray-50 border border-gray-200 
+           rounded-xl text-gray-800 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:border-transparent
+           transition-all duration-200;
+    --tw-ring-color: rgba(249, 95, 95, 0.5);
+  }
+  
+  .input-auth:focus {
+    border-color: #f95f5f;
   }
 
   .card {
@@ -49,6 +95,11 @@
 
   .glass {
     @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  /* Auth card with curved top */
+  .auth-card {
+    @apply bg-white rounded-t-[3rem] shadow-2xl;
   }
 }
 
@@ -111,4 +162,36 @@
 
 .bus-marker {
   animation: bus-pulse 2s ease-in-out infinite;
+}
+
+/* Auth page background pattern */
+.auth-bg-pattern {
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.03) 0%, transparent 50%);
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
 }

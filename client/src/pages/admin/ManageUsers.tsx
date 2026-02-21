@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import type { User } from '../../types';
+import UserAvatar from '../../components/ui/UserAvatar';
 
 export default function ManageUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -199,15 +200,7 @@ export default function ManageUsers() {
                 <tr key={user._id} className="border-b border-slate-800 hover:bg-slate-800/50">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center">
-                        {user.avatar ? (
-                          <img src={user.avatar} alt="" className="w-10 h-10 rounded-full" />
-                        ) : (
-                          <span className="text-white font-medium">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                      <UserAvatar name={user.name} avatar={user.avatar} size="md" />
                       <div>
                         <div className="font-medium text-white">{user.name}</div>
                         <div className="text-sm text-slate-400">{user.email}</div>

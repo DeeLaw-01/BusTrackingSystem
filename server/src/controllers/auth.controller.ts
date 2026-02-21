@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 
 import User from '../models/user.model';
 import { UserRole, IAuthResponse } from '../../../shared/src/user.types';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (userId: string, role: string): string => {
   return jwt.sign(
@@ -110,6 +113,79 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, error: 'Login failed' });
+  }
+};
+
+// POST /api/auth/google — verifies a Google ID token from @react-oauth/google
+export const googleTokenAuth = async (req: Request, res: Response): Promise<void> => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    res.status(400).json({ success: false, error: 'Google credential is required' });
+    return;
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      res.status(401).json({ success: false, error: 'Invalid Google token' });
+      return;
+    }
+
+    const { sub: googleId, email, name, picture: avatar } = payload;
+
+    // Try to find existing user by googleId
+    let user = await User.findOne({ googleId });
+
+    if (!user && email) {
+      // Link to existing account with the same email
+      user = await User.findOne({ email });
+      if (user) {
+        user.googleId = googleId;
+        if (avatar) user.avatar = avatar;
+        await user.save();
+      }
+    }
+
+    if (!user) {
+      // Create a new user (riders only via Google OAuth)
+      user = await User.create({
+        googleId,
+        email,
+        name,
+        avatar,
+        role: UserRole.RIDER,
+        isApproved: true,
+      });
+    }
+
+    const token = generateToken(user._id.toString(), user.role);
+
+    const response: IAuthResponse = {
+      user: {
+        _id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        role: user.role as UserRole,
+        homeStop: user.homeStop?.toString(),
+        isApproved: user.isApproved,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      token,
+    };
+
+    res.json({ success: true, data: response });
+  } catch (error) {
+    console.error('Google token auth error:', error);
+    res.status(401).json({ success: false, error: 'Google authentication failed' });
   }
 };
 

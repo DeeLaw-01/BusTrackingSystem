@@ -86,8 +86,8 @@ userSchema.methods.comparePassword = async function (
 };
 
 // Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+// Note: email already has unique: true which creates an index automatically
+userSchema.index({ googleId: 1 }, { sparse: true });
 userSchema.index({ role: 1 });
 
 const User = mongoose.model<IUserDocument>('User', userSchema);

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import passport from 'passport';
 
-import { register, login, googleCallback, getMe } from '../controllers/auth.controller';
+import { register, login, googleTokenAuth, googleCallback, getMe } from '../controllers/auth.controller';
 import { validate } from '../middleware/validation.middleware';
 import { authenticate } from '../middleware/auth.middleware';
 
@@ -25,7 +25,10 @@ const loginValidation = [
 router.post('/register', validate(registerValidation), register);
 router.post('/login', validate(loginValidation), login);
 
-// Google OAuth
+// Google OAuth — credential flow (@react-oauth/google sends ID token here)
+router.post('/google', googleTokenAuth);
+
+// Google OAuth — redirect flow (kept for backwards compatibility)
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get(
   '/google/callback',

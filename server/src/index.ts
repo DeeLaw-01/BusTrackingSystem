@@ -66,13 +66,12 @@ async function startServer() {
     await connectDB();
     console.log('✅ MongoDB connected');
 
-    // Connect to Redis
+    // Connect to Redis (optional - will use in-memory storage if unavailable)
     await connectRedis();
-    console.log('✅ Redis connected');
 
-    // Initialize Socket.io with Redis adapter
+    // Initialize Socket.io (with Redis adapter if available, otherwise in-memory)
     initializeSocket(server);
-    console.log('✅ Socket.io initialized with Redis adapter');
+    console.log('✅ Socket.io initialized');
 
     // Start background jobs
     startLocationFlushJob();

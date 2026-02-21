@@ -3,7 +3,7 @@ import { Server, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import jwt from 'jsonwebtoken';
 
-import { getRedisPub, getRedisSub } from './redis';
+import { getRedisPub, getRedisSub, isRedisEnabled } from './redis';
 import { driverHandlers } from '../socket/handlers/driver.handler';
 import { riderHandlers } from '../socket/handlers/rider.handler';
 
@@ -29,10 +29,21 @@ export function initializeSocket(server: HttpServer): void {
     transports: ['websocket', 'polling'],
   });
 
-  // Set up Redis adapter for horizontal scaling
-  const pubClient = getRedisPub();
-  const subClient = getRedisSub();
-  io.adapter(createAdapter(pubClient, subClient));
+  // Set up Redis adapter for horizontal scaling (if Redis is available)
+  if (isRedisEnabled()) {
+    const pubClient = getRedisPub();
+    const subClient = getRedisSub();
+    if (pubClient && subClient) {
+      try {
+        io.adapter(createAdapter(pubClient, subClient));
+        console.log('Socket.io initialized with Redis adapter');
+      } catch (error) {
+        console.warn('Failed to set up Redis adapter, using in-memory adapter:', error);
+      }
+    }
+  } else {
+    console.log('Socket.io initialized with in-memory adapter (Redis not available)');
+  }
 
   // Authentication middleware
   io.use((socket: AuthenticatedSocket, next) => {
@@ -80,8 +91,6 @@ export function initializeSocket(server: HttpServer): void {
       console.error(`Socket error for ${socket.userId}:`, error);
     });
   });
-
-  console.log('Socket.io server initialized with Redis adapter');
 }
 
 export function getIO(): Server<ClientToServerEvents, ServerToClientEvents> {
