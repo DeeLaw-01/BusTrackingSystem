@@ -105,21 +105,21 @@ export default function Settings () {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header */}
-      <header className='bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3 sticky top-0 z-50'>
+      <header className='bg-white border-b border-ui-border px-4 h-14 flex items-center gap-3 sticky top-0 z-50'>
         <button
           onClick={() => navigate(-1)}
-          className='p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors'
+          className='p-2 -ml-2 hover:bg-app-bg rounded-lg transition-colors'
           aria-label='Go back'
         >
-          <ArrowLeft className='w-5 h-5 text-gray-700' />
+          <ArrowLeft className='w-5 h-5 text-content-primary' />
         </button>
-        <h1 className='text-lg font-bold text-gray-900'>Settings</h1>
+        <h1 className='text-lg font-bold text-content-primary'>Settings</h1>
       </header>
 
       <div className='max-w-2xl mx-auto px-4 py-6'>
         {/* Profile Picture Section */}
-        <div className='bg-white rounded-2xl border border-gray-100 p-6 mb-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+        <div className='bg-white rounded-2xl border border-ui-border p-6 mb-6 shadow-sm'>
+          <h2 className='text-lg font-semibold text-content-primary mb-4'>
             Profile Picture
           </h2>
 
@@ -128,10 +128,10 @@ export default function Settings () {
               name={formData.name}
               avatar={formData.avatar}
               size='xl'
-              className='ring-4 ring-coral-100'
+              className='ring-4 ring-primary/10'
             />
             <div className='flex-1'>
-              <p className='text-sm text-gray-600 mb-2'>
+              <p className='text-sm text-content-secondary mb-2'>
                 Upload a new profile picture or enter an image URL
               </p>
               <div className='flex gap-2 flex-wrap'>
@@ -180,7 +180,7 @@ export default function Settings () {
                   <button
                     onClick={() => handleAvatarUrlChange('')}
                     disabled={uploading}
-                    className='btn btn-secondary text-sm text-red-500 hover:text-red-600 disabled:opacity-50'
+                    className='btn-secondary text-sm !text-red-500 hover:!bg-red-50 disabled:opacity-50'
                   >
                     <X className='w-4 h-4' />
                     Remove
@@ -191,13 +191,13 @@ export default function Settings () {
               {/* Upload Progress */}
               {uploading && (
                 <div className='mt-3'>
-                  <div className='flex items-center justify-between text-xs text-gray-600 mb-1'>
+                  <div className='flex items-center justify-between text-xs text-content-secondary mb-1'>
                     <span>Uploading...</span>
                     <span>{Math.round(uploadProgress)}%</span>
                   </div>
-                  <div className='w-full bg-gray-200 rounded-full h-2 overflow-hidden'>
+                  <div className='w-full bg-app-bg rounded-full h-2 overflow-hidden'>
                     <div
-                      className='bg-coral-500 h-2 rounded-full transition-all duration-300'
+                      className='bg-primary h-2 rounded-full transition-all duration-300'
                       style={{ width: `${uploadProgress}%` }}
                       role='progressbar'
                       aria-label={`Upload progress: ${Math.round(
@@ -211,11 +211,11 @@ export default function Settings () {
           </div>
 
           {formData.avatar && !formData.avatar.startsWith('data:') && (
-            <div className='mt-4 p-3 bg-gray-50 rounded-lg'>
-              <p className='text-xs text-gray-500 mb-1'>
+            <div className='mt-4 p-3 bg-app-bg rounded-lg border border-ui-border/50'>
+              <p className='text-xs text-content-secondary mb-1'>
                 Image hosted on Cloudinary
               </p>
-              <p className='text-xs text-gray-700 font-mono break-all'>
+              <p className='text-xs text-content-primary font-mono break-all'>
                 {formData.avatar.length > 60
                   ? `${formData.avatar.substring(0, 60)}...`
                   : formData.avatar}
@@ -226,19 +226,19 @@ export default function Settings () {
 
         {/* Account Information Form */}
         <form onSubmit={handleSubmit} className='space-y-6'>
-          <div className='bg-white rounded-2xl border border-gray-100 p-6'>
-            <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+          <div className='bg-white rounded-2xl border border-ui-border p-6 shadow-sm'>
+            <h2 className='text-lg font-semibold text-content-primary mb-4'>
               Account Information
             </h2>
 
             <div className='space-y-4'>
               {/* Name */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-content-primary mb-2'>
                   Full Name
                 </label>
                 <div className='relative'>
-                  <User className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' />
+                  <User className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-content-secondary/60' />
                   <input
                     type='text'
                     value={formData.name}
@@ -254,31 +254,31 @@ export default function Settings () {
 
               {/* Email (read-only) */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-content-primary mb-2'>
                   Email Address
                 </label>
                 <div className='relative'>
-                  <Mail className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' />
+                  <Mail className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-content-secondary/60' />
                   <input
                     type='email'
                     value={formData.email}
                     disabled
                     aria-label='Email address (read-only)'
-                    className='input-auth pl-10 bg-gray-50 text-gray-500 cursor-not-allowed'
+                    className='input-auth pl-10 bg-app-bg text-content-secondary cursor-not-allowed border-ui-border'
                   />
                 </div>
-                <p className='text-xs text-gray-500 mt-1'>
+                <p className='text-xs text-content-secondary mt-1'>
                   Email cannot be changed
                 </p>
               </div>
 
               {/* Phone */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-medium text-content-primary mb-2'>
                   Phone Number
                 </label>
                 <div className='relative'>
-                  <Phone className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' />
+                  <Phone className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-content-secondary/60' />
                   <input
                     type='tel'
                     value={formData.phone}

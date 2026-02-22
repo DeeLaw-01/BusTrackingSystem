@@ -55,7 +55,7 @@ export default function DriverDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -64,10 +64,10 @@ export default function DriverDashboard() {
     <div className="max-w-4xl mx-auto p-4">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold text-white mb-2">
+        <h1 className="text-3xl font-display font-bold text-content-primary mb-2">
           Driver Dashboard
         </h1>
-        <p className="text-slate-400">
+        <p className="text-content-secondary">
           Welcome back, {user?.name}
         </p>
       </div>
@@ -90,27 +90,27 @@ export default function DriverDashboard() {
       {/* Assigned Bus */}
       {assignedBus && (
         <div className="card mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Bus className="w-5 h-5 text-primary-400" />
+          <h2 className="text-lg font-semibold text-content-primary mb-4 flex items-center gap-2">
+            <Bus className="w-5 h-5 text-primary" />
             Your Assigned Bus
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="p-4 bg-slate-800/50 rounded-lg">
-              <div className="text-sm text-slate-400 mb-1">Bus Name</div>
-              <div className="text-lg font-semibold text-white">{assignedBus.name}</div>
+            <div className="p-4 bg-app-bg rounded-lg border border-ui-border">
+              <div className="text-sm text-content-secondary mb-1">Bus Name</div>
+              <div className="text-lg font-semibold text-content-primary">{assignedBus.name}</div>
             </div>
-            <div className="p-4 bg-slate-800/50 rounded-lg">
-              <div className="text-sm text-slate-400 mb-1">Plate Number</div>
-              <div className="text-lg font-semibold text-white">{assignedBus.plateNumber}</div>
+            <div className="p-4 bg-app-bg rounded-lg border border-ui-border">
+              <div className="text-sm text-content-secondary mb-1">Plate Number</div>
+              <div className="text-lg font-semibold text-content-primary">{assignedBus.plateNumber}</div>
             </div>
-            <div className="p-4 bg-slate-800/50 rounded-lg">
-              <div className="text-sm text-slate-400 mb-1">Capacity</div>
-              <div className="text-lg font-semibold text-white">{assignedBus.capacity} seats</div>
+            <div className="p-4 bg-app-bg rounded-lg border border-ui-border">
+              <div className="text-sm text-content-secondary mb-1">Capacity</div>
+              <div className="text-lg font-semibold text-content-primary">{assignedBus.capacity} seats</div>
             </div>
-            <div className="p-4 bg-slate-800/50 rounded-lg">
-              <div className="text-sm text-slate-400 mb-1">Route</div>
-              <div className="text-lg font-semibold text-white flex items-center gap-2">
-                <RouteIcon className="w-4 h-4 text-primary-400" />
+            <div className="p-4 bg-app-bg rounded-lg border border-ui-border">
+              <div className="text-sm text-content-secondary mb-1">Route</div>
+              <div className="text-lg font-semibold text-content-primary flex items-center gap-2">
+                <RouteIcon className="w-4 h-4 text-primary" />
                 {typeof assignedBus.routeId === 'object' 
                   ? (assignedBus.routeId as { name: string }).name 
                   : 'Not assigned'}

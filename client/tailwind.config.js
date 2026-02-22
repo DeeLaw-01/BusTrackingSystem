@@ -7,61 +7,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary brand colors
+        // Primary Action Color
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
+          DEFAULT: '#F23B3B',
+          hover: '#D32F2F',
         },
-        // Accent colors
-        accent: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
-          950: '#4a044e',
-        },
-        // Auth page colors (chocolate brown theme)
+        // Background System
+        'app-bg': '#F2F2F2',
+        'app-card': '#FFFFFF',
+        'app-splash': '#7B5442',
+        // Text Color Hierarchy
+        'content-primary': '#222222',
+        'content-secondary': '#777777',
+        // Border and UI elements
+        'ui-border': '#E0E0E0',
+        'ui-focus': '#333333',
+        // Legacy colors (keeping some for compatibility during transition)
         chocolate: {
-          50: '#fdf8f6',
-          100: '#f8ede8',
-          200: '#f0d9cf',
-          300: '#e5bfad',
-          400: '#d49a7f',
-          500: '#c47d5c',
-          600: '#b26a4a',
-          700: '#8b5544', // Main brown
-          800: '#734938',
-          900: '#5f3d30',
-          950: '#331f18',
+          700: '#7B5442',
         },
-        // Coral/Red for buttons
         coral: {
-          50: '#fff5f5',
-          100: '#ffe3e3',
-          200: '#ffcccc',
-          300: '#ffaaaa',
-          400: '#ff7d7d',
-          500: '#f95f5f', // Main coral/red
-          600: '#e64545',
-          700: '#c23636',
-          800: '#a02e2e',
-          900: '#842b2b',
-          950: '#481414',
+          500: '#F23B3B',
+          600: '#D32F2F',
         },
       },
       fontFamily: {

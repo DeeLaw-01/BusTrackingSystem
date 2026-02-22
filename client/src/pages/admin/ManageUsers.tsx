@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { 
-  Users, 
   Search, 
   Check, 
   X, 
@@ -93,7 +92,7 @@ export default function ManageUsers() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -101,15 +100,15 @@ export default function ManageUsers() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-white">Manage Users</h1>
+        <h1 className="text-2xl font-display font-bold text-content-primary">Manage Users</h1>
       </div>
 
       {/* Pending Drivers Alert */}
       {pendingDrivers.length > 0 && (
-        <div className="card bg-amber-500/10 border-amber-500/20">
+        <div className="card bg-amber-50 border-amber-200">
           <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="w-5 h-5 text-amber-400" />
-            <h2 className="font-semibold text-amber-400">
+            <AlertCircle className="w-5 h-5 text-amber-600" />
+            <h2 className="font-semibold text-amber-800">
               {pendingDrivers.length} Driver{pendingDrivers.length > 1 ? 's' : ''} Pending Approval
             </h2>
           </div>
@@ -117,23 +116,23 @@ export default function ManageUsers() {
             {pendingDrivers.map((driver) => (
               <div
                 key={driver._id}
-                className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-white border border-amber-100 rounded-lg shadow-sm"
               >
                 <div>
-                  <div className="font-medium text-white">{driver.name}</div>
-                  <div className="text-sm text-slate-400">{driver.email}</div>
+                  <div className="font-medium text-content-primary">{driver.name}</div>
+                  <div className="text-sm text-content-secondary">{driver.email}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleApproveDriver(driver._id)}
-                    className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors shadow-sm"
                     title="Approve"
                   >
                     <Check className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleRejectDriver(driver._id)}
-                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                    className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors shadow-sm"
                     title="Reject"
                   >
                     <X className="w-4 h-4" />
@@ -146,11 +145,11 @@ export default function ManageUsers() {
       )}
 
       {/* Search & Filters */}
-      <div className="card">
+      <div className="card shadow-sm">
         <form onSubmit={handleSearch} className="flex gap-4 flex-wrap">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-content-secondary/60" />
               <input
                 type="text"
                 value={search}
@@ -161,14 +160,14 @@ export default function ManageUsers() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-slate-500" />
+            <Filter className="w-5 h-5 text-content-secondary/60" />
             <select
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
                 setPage(1);
               }}
-              className="input w-auto"
+              className="input w-auto h-[46px] py-0"
             >
               <option value="">All Roles</option>
               <option value="rider">Riders</option>
@@ -176,65 +175,67 @@ export default function ManageUsers() {
               <option value="admin">Admins</option>
             </select>
           </div>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-coral px-8">
             Search
           </button>
         </form>
       </div>
 
       {/* Users Table */}
-      <div className="card overflow-hidden">
+      <div className="card shadow-sm overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-700">
-                <th className="text-left p-4 text-sm font-medium text-slate-400">User</th>
-                <th className="text-left p-4 text-sm font-medium text-slate-400">Role</th>
-                <th className="text-left p-4 text-sm font-medium text-slate-400">Status</th>
-                <th className="text-left p-4 text-sm font-medium text-slate-400">Joined</th>
-                <th className="text-right p-4 text-sm font-medium text-slate-400">Actions</th>
+              <tr className="border-b border-ui-border bg-app-bg/50">
+                <th className="text-left p-4 text-sm font-semibold text-content-secondary">User</th>
+                <th className="text-left p-4 text-sm font-semibold text-content-secondary">Role</th>
+                <th className="text-left p-4 text-sm font-semibold text-content-secondary">Status</th>
+                <th className="text-left p-4 text-sm font-semibold text-content-secondary">Joined</th>
+                <th className="text-right p-4 text-sm font-semibold text-content-secondary">Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user._id} className="border-b border-slate-800 hover:bg-slate-800/50">
+                <tr key={user._id} className="border-b border-ui-border hover:bg-app-bg/50 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <UserAvatar name={user.name} avatar={user.avatar} size="md" />
                       <div>
-                        <div className="font-medium text-white">{user.name}</div>
-                        <div className="text-sm text-slate-400">{user.email}</div>
+                        <div className="font-semibold text-content-primary">{user.name}</div>
+                        <div className="text-sm text-content-secondary">{user.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
                       user.role === 'admin'
-                        ? 'bg-purple-500/20 text-purple-400'
+                        ? 'bg-purple-50 text-purple-600'
                         : user.role === 'driver'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-green-500/20 text-green-400'
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'bg-green-50 text-green-600'
                     }`}>
                       {user.role}
                     </span>
                   </td>
                   <td className="p-4">
                     {user.isApproved ? (
-                      <span className="flex items-center gap-1 text-green-400 text-sm">
+                      <span className="flex items-center gap-1.5 text-green-600 font-medium text-sm">
                         <UserCheck className="w-4 h-4" />
                         Approved
                       </span>
                     ) : (
-                      <span className="text-amber-400 text-sm">Pending</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-600 border border-amber-100">
+                        Pending
+                      </span>
                     )}
                   </td>
-                  <td className="p-4 text-sm text-slate-400">
+                  <td className="p-4 text-sm text-content-secondary">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="p-4 text-right">
                     <button
                       onClick={() => handleDeleteUser(user._id)}
-                      className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                      className="p-2 text-content-secondary hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -248,21 +249,21 @@ export default function ManageUsers() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-slate-800">
+          <div className="flex items-center justify-between p-4 border-t border-ui-border bg-app-bg/30">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="btn btn-secondary"
+              className="btn-secondary px-4 py-2 text-sm"
             >
               Previous
             </button>
-            <span className="text-sm text-slate-400">
+            <span className="text-sm font-medium text-content-secondary">
               Page {page} of {totalPages}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="btn btn-secondary"
+              className="btn-secondary px-4 py-2 text-sm"
             >
               Next
             </button>

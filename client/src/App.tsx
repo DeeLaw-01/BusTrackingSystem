@@ -48,8 +48,8 @@ function ProtectedRoute ({
 
   if (isLoading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500'></div>
+      <div className='min-h-screen flex items-center justify-center bg-white'>
+        <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary'></div>
       </div>
     )
   }
@@ -59,6 +59,8 @@ function ProtectedRoute ({
   }
 
   if (roles && user && !roles.includes(user.role)) {
+    if (user.role === 'admin') return <Navigate to='/admin' replace />
+    if (user.role === 'driver') return <Navigate to='/driver' replace />
     return <Navigate to='/' replace />
   }
 
@@ -68,13 +70,13 @@ function ProtectedRoute ({
       <div className='min-h-screen flex items-center justify-center bg-slate-950'>
         <div className='card max-w-md text-center'>
           <h2 className='text-2xl font-bold mb-4'>Account Pending Approval</h2>
-          <p className='text-slate-400 mb-6'>
+          <p className='text-content-secondary mb-6'>
             Your driver account is pending admin approval. Please wait for
             verification.
           </p>
           <button
             onClick={() => useAuthStore.getState().logout()}
-            className='btn btn-secondary'
+            className='btn-secondary'
           >
             Logout
           </button>
@@ -102,12 +104,12 @@ export default function App () {
         <Route path='/forgot-password' element={<ForgotPassword />} />
       </Route>
 
-      {/* Rider Routes — full-screen pages (no AppLayout chrome) */}
+      {/* Home Dispatcher / Rider Dashboard */}
       <Route
         path='/'
         element={
-          <ProtectedRoute roles={['rider']}>
-            <RiderDashboard />
+          <ProtectedRoute>
+            <HomeDispatcher />
           </ProtectedRoute>
         }
       />
@@ -185,4 +187,12 @@ export default function App () {
       <Route path='*' element={<Navigate to='/' replace />} />
     </Routes>
   )
+}
+function HomeDispatcher () {
+  const { user } = useAuthStore()
+
+  if (user?.role === 'admin') return <Navigate to='/admin' replace />
+  if (user?.role === 'driver') return <Navigate to='/driver' replace />
+
+  return <RiderDashboard />
 }

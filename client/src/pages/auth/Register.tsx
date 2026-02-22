@@ -254,20 +254,20 @@ export default function Register () {
           <div className='w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4'>
             <AlertTriangle className='w-7 h-7 text-amber-500' />
           </div>
-          <h2 className='text-2xl font-bold text-gray-800'>
+          <h2 className='text-2xl font-bold text-content-primary'>
             Invitation Required
           </h2>
-          <p className='text-gray-500 text-sm mt-2'>
+          <p className='text-content-secondary text-sm mt-2'>
             You need an invitation from your organization's administrator to
             create an account. Please check your email for an invitation link.
           </p>
         </div>
 
-        <p className='text-center text-gray-600 text-sm'>
+        <p className='text-center text-content-secondary text-sm'>
           Already have an account?{' '}
           <Link
             to='/login'
-            className='text-red-500 hover:text-red-600 font-semibold transition-colors'
+            className='text-primary hover:text-primary-hover font-semibold transition-colors'
           >
             Sign in
           </Link>
@@ -299,11 +299,11 @@ export default function Register () {
           <div className='w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4'>
             <Mail className='w-7 h-7 text-red-500' />
           </div>
-          <h2 className='text-2xl font-bold text-gray-800'>Check your email</h2>
-          <p className='text-gray-500 text-sm mt-2'>
+          <h2 className='text-2xl font-bold text-content-primary'>Check your email</h2>
+          <p className='text-content-secondary text-sm mt-2'>
             We sent a 6-digit code to
             <br />
-            <span className='font-semibold text-gray-700'>
+            <span className='font-semibold text-content-primary'>
               {formData.email}
             </span>
           </p>
@@ -331,9 +331,9 @@ export default function Register () {
                 onChange={e => handleOtpChange(i, e.target.value)}
                 onKeyDown={e => handleOtpKeyDown(i, e)}
                 onPaste={i === 0 ? handleOtpPaste : undefined}
-                className='w-12 h-14 text-center text-xl font-bold text-gray-800
-                           bg-gray-50 border-2 border-gray-200 rounded-xl
-                           focus:outline-none focus:border-red-400 focus:bg-white
+                className='w-12 h-14 text-center text-xl font-bold text-content-primary
+                           bg-gray-50 border-2 border-ui-border rounded-xl
+                           focus:outline-none focus:border-content-primary/20 focus:bg-white
                            transition-all duration-200'
               />
             ))}
@@ -352,12 +352,12 @@ export default function Register () {
           </button>
         </form>
 
-        <p className='text-center text-sm text-gray-500'>
+        <p className='text-center text-sm text-content-secondary'>
           Didn't receive it?{' '}
           <button
             onClick={handleResend}
             disabled={resendCooldown > 0 || isSubmitting}
-            className='font-semibold text-red-500 hover:text-red-600 disabled:text-gray-400
+            className='font-semibold text-primary hover:text-primary-hover disabled:text-content-secondary/50
                        disabled:cursor-not-allowed transition-colors'
           >
             {resendCooldown > 0
@@ -370,7 +370,7 @@ export default function Register () {
           <p className='text-center text-gray-600 text-sm'>
             <Link
               to='/login'
-              className='text-red-500 hover:text-red-600 font-semibold transition-colors'
+              className='text-primary hover:text-primary-hover font-semibold transition-colors'
             >
               Back to Login
             </Link>
@@ -385,8 +385,8 @@ export default function Register () {
   return (
     <div className='space-y-5'>
       <div>
-        <h2 className='text-2xl font-bold text-gray-800'>Create Account</h2>
-        <p className='text-gray-500 text-sm mt-1'>
+        <h2 className='text-2xl font-bold text-content-primary'>Create Account</h2>
+        <p className='text-content-secondary text-sm mt-1'>
           Complete your registration to join BusTrack
         </p>
       </div>
@@ -399,7 +399,7 @@ export default function Register () {
 
       <form onSubmit={handleFormSubmit} className='space-y-4'>
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>
+          <label className='block text-sm font-medium text-content-primary mb-2'>
             Full Name
           </label>
           <input
@@ -414,7 +414,7 @@ export default function Register () {
         </div>
 
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>
+          <label className='block text-sm font-medium text-content-primary mb-2'>
             Email Address
           </label>
           <input
@@ -428,16 +428,16 @@ export default function Register () {
             readOnly={!!inviteToken}
           />
           {inviteToken && (
-            <p className='mt-1 text-xs text-gray-400'>
+            <p className='mt-1 text-xs text-content-secondary'>
               Email is set by your invitation and cannot be changed.
             </p>
           )}
         </div>
 
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>
+          <label className='block text-sm font-medium text-content-primary mb-2'>
             Phone Number{' '}
-            <span className='text-gray-400 font-normal'>(Optional)</span>
+            <span className='text-content-secondary font-normal'>(Optional)</span>
           </label>
           <input
             type='tel'
@@ -450,7 +450,7 @@ export default function Register () {
         </div>
 
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>
+          <label className='block text-sm font-medium text-content-primary mb-2'>
             Password
           </label>
           <div className='relative'>
@@ -466,7 +466,7 @@ export default function Register () {
             <button
               type='button'
               onClick={() => setShowPassword(!showPassword)}
-              className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors'
+              className='absolute right-4 top-1/2 -translate-y-1/2 text-content-secondary hover:text-content-primary transition-colors'
             >
               {showPassword ? (
                 <EyeOff className='w-5 h-5' />
@@ -478,7 +478,7 @@ export default function Register () {
         </div>
 
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>
+          <label className='block text-sm font-medium text-content-primary mb-2'>
             Confirm Password
           </label>
           <input
@@ -505,11 +505,11 @@ export default function Register () {
         </button>
       </form>
 
-      <p className='text-center text-gray-600 text-sm'>
+      <p className='text-center text-content-secondary text-sm'>
         Already have an account?{' '}
         <Link
           to='/login'
-          className='text-red-500 hover:text-red-600 font-semibold transition-colors'
+          className='text-primary hover:text-primary-hover font-semibold transition-colors'
         >
           Sign in
         </Link>

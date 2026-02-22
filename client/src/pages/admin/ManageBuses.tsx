@@ -53,7 +53,7 @@ export default function ManageBuses() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -61,13 +61,13 @@ export default function ManageBuses() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-white">Manage Buses</h1>
+        <h1 className="text-2xl font-display font-bold text-content-primary">Manage Buses</h1>
         <button
           onClick={() => {
             setEditingBus(null);
             setShowModal(true);
           }}
-          className="btn btn-primary"
+          className="btn-coral flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Add Bus
@@ -76,13 +76,13 @@ export default function ManageBuses() {
 
       {/* Buses Grid */}
       {buses.length === 0 ? (
-        <div className="card text-center py-12">
-          <Bus className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No Buses Yet</h3>
-          <p className="text-slate-400 mb-6">Add your first bus to get started</p>
+        <div className="card shadow-sm text-center py-12">
+          <Bus className="w-12 h-12 text-content-secondary/30 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-content-primary mb-2">No Buses Yet</h3>
+          <p className="text-content-secondary mb-6">Add your first bus to get started</p>
           <button
             onClick={() => setShowModal(true)}
-            className="btn btn-primary"
+            className="btn-coral"
           >
             <Plus className="w-5 h-5" />
             Add Bus
@@ -95,10 +95,10 @@ export default function ManageBuses() {
             const driver = typeof bus.driverId === 'object' ? bus.driverId as UserType : null;
 
             return (
-              <div key={bus._id} className="card">
+              <div key={bus._id} className="card shadow-sm">
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`p-2 rounded-lg ${bus.isActive ? 'bg-green-600/20' : 'bg-slate-700'}`}>
-                    <Bus className={`w-5 h-5 ${bus.isActive ? 'text-green-400' : 'text-slate-400'}`} />
+                  <div className={`p-2 rounded-lg ${bus.isActive ? 'bg-green-50' : 'bg-app-bg'}`}>
+                    <Bus className={`w-5 h-5 ${bus.isActive ? 'text-green-600' : 'text-content-secondary'}`} />
                   </div>
                   <div className="flex items-center gap-1">
                     <button
@@ -106,39 +106,39 @@ export default function ManageBuses() {
                         setEditingBus(bus);
                         setShowModal(true);
                       }}
-                      className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
+                      className="p-2 text-content-secondary hover:text-content-primary hover:bg-app-bg rounded-lg transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteBus(bus._id)}
-                      className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg"
+                      className="p-2 text-content-secondary hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-white mb-1">{bus.name}</h3>
-                <p className="text-sm text-slate-400 mb-4">{bus.plateNumber}</p>
+                <h3 className="font-semibold text-content-primary mb-1">{bus.name}</h3>
+                <p className="text-sm text-content-secondary mb-4">{bus.plateNumber}</p>
 
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <RouteIcon className="w-4 h-4" />
-                    <span>{route?.name || 'No route assigned'}</span>
+                  <div className="flex items-center gap-2 text-content-secondary">
+                    <RouteIcon className="w-4 h-4 opacity-70" />
+                    <span className="font-medium">{route?.name || 'No route assigned'}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <User className="w-4 h-4" />
-                    <span>{driver?.name || 'No driver assigned'}</span>
+                  <div className="flex items-center gap-2 text-content-secondary">
+                    <User className="w-4 h-4 opacity-70" />
+                    <span className="font-medium">{driver?.name || 'No driver assigned'}</span>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Capacity: {bus.capacity}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
+                <div className="mt-4 pt-4 border-t border-ui-border flex items-center justify-between text-sm">
+                  <span className="text-content-secondary/60 font-medium">Capacity: {bus.capacity}</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
                     bus.isActive
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-slate-700 text-slate-400'
+                      ? 'bg-green-50 text-green-600 border border-green-100'
+                      : 'bg-app-bg text-content-secondary border border-ui-border'
                   }`}>
                     {bus.isActive ? 'Active' : 'Inactive'}
                   </span>
@@ -238,14 +238,14 @@ function BusModal({ bus, routes, drivers, assignedDriverIds, onClose, onSuccess 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="card max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-semibold text-white mb-6">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="card max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <h2 className="text-xl font-display font-bold text-content-primary mb-6">
           {bus ? 'Edit Bus' : 'Add Bus'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Bus Name
             </label>
             <input
@@ -258,7 +258,7 @@ function BusModal({ bus, routes, drivers, assignedDriverIds, onClose, onSuccess 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Plate Number
             </label>
             <input
@@ -271,7 +271,7 @@ function BusModal({ bus, routes, drivers, assignedDriverIds, onClose, onSuccess 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Capacity
             </label>
             <input
@@ -284,7 +284,7 @@ function BusModal({ bus, routes, drivers, assignedDriverIds, onClose, onSuccess 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Assigned Route
             </label>
             <select
@@ -301,7 +301,7 @@ function BusModal({ bus, routes, drivers, assignedDriverIds, onClose, onSuccess 
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Assigned Driver
             </label>
             <select
@@ -319,22 +319,22 @@ function BusModal({ bus, routes, drivers, assignedDriverIds, onClose, onSuccess 
           </div>
           {bus && (
             <div>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-primary-600 focus:ring-primary-500"
+                  className="w-4 h-4 rounded border-ui-border text-primary focus:ring-primary"
                 />
-                <span className="text-slate-300">Bus is active</span>
+                <span className="text-content-secondary group-hover:text-content-primary font-medium transition-colors">Bus is active</span>
               </label>
             </div>
           )}
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="btn btn-secondary flex-1">
+            <button type="button" onClick={onClose} className="btn-secondary h-[46px] flex-1">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="btn btn-primary flex-1">
+            <button type="submit" disabled={saving} className="btn-coral h-[46px] flex-1">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save'}
             </button>
           </div>

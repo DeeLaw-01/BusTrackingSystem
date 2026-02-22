@@ -447,20 +447,20 @@ export default function ActiveTrip() {
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center min-h-[60vh]'>
-        <Loader2 className='w-8 h-8 text-primary-500 animate-spin' />
+      <div className='flex items-center justify-center min-h-[60vh] bg-white'>
+        <Loader2 className='w-8 h-8 text-primary animate-spin' />
       </div>
     )
   }
 
   if (!bus) {
     return (
-      <div className='max-w-md mx-auto p-4 text-center'>
-        <AlertCircle className='w-12 h-12 text-amber-400 mx-auto mb-4' />
-        <h2 className='text-xl font-semibold text-white mb-2'>
+      <div className='max-w-md mx-auto p-8 text-center bg-white rounded-2xl shadow-sm mt-8'>
+        <AlertCircle className='w-12 h-12 text-amber-500 mx-auto mb-4' />
+        <h2 className='text-xl font-semibold text-content-primary mb-2'>
           No Bus Assigned
         </h2>
-        <p className='text-slate-400'>
+        <p className='text-content-secondary'>
           You need a bus assigned to start a trip.
         </p>
       </div>
@@ -504,10 +504,10 @@ export default function ActiveTrip() {
 
       {/* ─── Pre-trip header ──────────────────────────────────────── */}
       {!tripActive && (
-        <div className='bg-slate-800 text-white p-4 flex items-center justify-between shrink-0'>
+        <div className='bg-white border-b border-ui-border p-4 flex items-center justify-between shrink-0'>
           <div>
-            <div className='font-semibold text-lg'>{bus.name}</div>
-            <div className='text-slate-400 text-sm'>
+            <div className='font-semibold text-lg text-content-primary'>{bus.name}</div>
+            <div className='text-content-secondary text-sm'>
               {bus.plateNumber} •{' '}
               {route ? `${stops.length} stops` : 'No route assigned'}
             </div>
@@ -515,7 +515,7 @@ export default function ActiveTrip() {
           <button
             onClick={handleStartTrip}
             disabled={starting || !route}
-            className='btn btn-primary px-6'
+            className='btn-coral px-6 py-2 h-auto'
           >
             {starting ? (
               <Loader2 className='w-5 h-5 animate-spin' />
@@ -652,15 +652,15 @@ export default function ActiveTrip() {
         {/* Stop list bar (bottom of map when trip active) */}
         {tripActive && (
           <div className='absolute bottom-0 left-0 right-0 z-[1000]'>
-            <div className='bg-slate-900/95 backdrop-blur-md rounded-t-2xl px-4 py-3'>
-              <div className='flex items-center justify-between mb-2'>
-                <span className='text-xs font-medium text-slate-400 uppercase tracking-wider'>
+            <div className='bg-white/95 backdrop-blur-md rounded-t-2xl px-4 py-4 border-t border-ui-border shadow-2xl'>
+              <div className='flex items-center justify-between mb-4'>
+                <span className='text-xs font-bold text-content-secondary uppercase tracking-wider'>
                   Upcoming stops
                 </span>
                 <button
                   onClick={handleEndTrip}
                   disabled={ending}
-                  className='flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors'
+                  className='flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors'
                 >
                   {ending ? (
                     <Loader2 className='w-3.5 h-3.5 animate-spin' />
@@ -677,24 +677,24 @@ export default function ActiveTrip() {
                     key={stop._id}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg shrink-0 ${
                       i === 0
-                        ? 'bg-coral-500/20 border border-coral-500/30'
-                        : 'bg-slate-800'
+                        ? 'bg-primary/10 border border-primary/20'
+                        : 'bg-app-bg border border-ui-border'
                     }`}
                   >
                     <MapPin
                       className={`w-3.5 h-3.5 shrink-0 ${
-                        i === 0 ? 'text-coral-400' : 'text-slate-500'
+                        i === 0 ? 'text-primary' : 'text-content-secondary'
                       }`}
                     />
                     <span
                       className={`text-sm font-medium whitespace-nowrap ${
-                        i === 0 ? 'text-white' : 'text-slate-400'
+                        i === 0 ? 'text-primary' : 'text-content-secondary'
                       }`}
                     >
                       {stop.name}
                     </span>
                     {i < stops.slice(nextStopIdx).length - 1 && (
-                      <ChevronRight className='w-3.5 h-3.5 text-slate-600 shrink-0' />
+                      <ChevronRight className='w-3.5 h-3.5 text-ui-border shrink-0' />
                     )}
                   </div>
                 ))}

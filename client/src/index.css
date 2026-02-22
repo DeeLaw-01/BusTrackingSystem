@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 antialiased;
+    @apply bg-app-bg text-content-primary antialiased;
     font-family: 'Poppins', system-ui, sans-serif;
   }
 
@@ -16,6 +16,7 @@
   h4,
   h5,
   h6 {
+    @apply text-content-primary;
     font-family: 'Poppins', system-ui, sans-serif;
   }
 }
@@ -28,33 +29,32 @@
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-500 to-primary-600 text-white 
-           hover:from-primary-600 hover:to-primary-700 
-           shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40;
+    @apply bg-primary text-white hover:bg-primary-hover 
+           shadow-sm transition-colors;
   }
 
   .btn-secondary {
-    @apply bg-slate-800 text-slate-100 hover:bg-slate-700 
-           border border-slate-700;
+    @apply bg-app-card text-content-primary hover:bg-gray-50 
+           border border-ui-border;
   }
 
   .btn-danger {
     @apply bg-red-600 text-white hover:bg-red-700;
   }
 
-  /* Auth page specific button - using Tailwind coral colors */
+  /* Core primary button - based on #F23B3B */
   .btn-coral {
-    @apply bg-coral-500 text-white font-semibold px-6 py-4 rounded-full
-           shadow-lg shadow-coral-500/30 transition-all duration-300
-           flex items-center justify-center gap-2;
+    @apply bg-primary text-white font-semibold px-6 py-4 rounded-xl
+           shadow-md hover:shadow-lg transition-all duration-300
+           flex items-center justify-center gap-2 hover:scale-[1.02];
   }
 
   .btn-coral:hover {
-    @apply bg-coral-600 shadow-coral-500/50 scale-[1.02];
+    @apply bg-primary-hover;
   }
 
   .btn-coral:active {
-    @apply bg-coral-700;
+    @apply scale-100;
   }
 
   .btn-coral:disabled {
@@ -62,32 +62,32 @@
   }
 
   .input {
-    @apply w-full px-4 py-3 bg-slate-900 border border-slate-700 
-           rounded-lg text-slate-100 placeholder-slate-500
-           focus:outline-none focus:ring-2 focus:ring-primary-500 
-           focus:border-transparent transition-all;
+    @apply w-full px-4 py-3 bg-app-card border border-ui-border 
+           rounded-lg text-content-primary placeholder-content-secondary
+           focus:outline-none focus:ring-2 focus:ring-content-primary/10 
+           focus:border-ui-focus transition-all;
   }
 
   /* Auth page input style */
   .input-auth {
-    @apply w-full px-4 py-3 bg-gray-50 border border-gray-200 
-           rounded-xl text-gray-800 placeholder-gray-400
-           focus:outline-none focus:ring-2 focus:ring-coral-500/50 
-           focus:border-coral-500 transition-all duration-200;
+    @apply w-full px-4 py-3 bg-white border border-ui-border 
+           rounded-xl text-content-primary placeholder-content-secondary
+           focus:outline-none focus:ring-2 focus:ring-primary/20 
+           focus:border-primary transition-all duration-200;
   }
 
   .card {
-    @apply bg-slate-900/50 backdrop-blur-sm border border-slate-800 
-           rounded-xl p-6;
+    @apply bg-app-card border border-ui-border 
+           shadow-sm rounded-xl p-6;
   }
 
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+    @apply bg-white/80 backdrop-blur-md border border-ui-border;
   }
 
   /* Auth card with curved top */
   .auth-card {
-    @apply bg-white rounded-t-[3rem] shadow-2xl;
+    @apply bg-app-card rounded-t-[3rem] shadow-2xl;
   }
 }
 

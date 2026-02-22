@@ -62,7 +62,7 @@ export default function ManageRoutes() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -70,13 +70,13 @@ export default function ManageRoutes() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-white">Manage Routes</h1>
+        <h1 className="text-2xl font-display font-bold text-content-primary">Manage Routes</h1>
         <button
           onClick={() => {
             setEditingRoute(null);
             setShowRouteModal(true);
           }}
-          className="btn btn-primary"
+          className="btn-coral flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Add Route
@@ -85,13 +85,13 @@ export default function ManageRoutes() {
 
       {/* Routes List */}
       {routes.length === 0 ? (
-        <div className="card text-center py-12">
-          <RouteIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No Routes Yet</h3>
-          <p className="text-slate-400 mb-6">Create your first route to get started</p>
+        <div className="card shadow-sm text-center py-12">
+          <RouteIcon className="w-12 h-12 text-content-secondary/30 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-content-primary mb-2">No Routes Yet</h3>
+          <p className="text-content-secondary mb-6">Create your first route to get started</p>
           <button
             onClick={() => setShowRouteModal(true)}
-            className="btn btn-primary"
+            className="btn-coral"
           >
             <Plus className="w-5 h-5" />
             Create Route
@@ -100,19 +100,19 @@ export default function ManageRoutes() {
       ) : (
         <div className="space-y-4">
           {routes.map((route) => (
-            <div key={route._id} className="card">
+            <div key={route._id} className="card shadow-sm">
               {/* Route Header */}
               <div
                 className="flex items-center justify-between cursor-pointer"
                 onClick={() => setExpandedRoute(expandedRoute === route._id ? null : route._id)}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-lg ${route.isActive ? 'bg-green-600/20' : 'bg-slate-700'}`}>
-                    <RouteIcon className={`w-5 h-5 ${route.isActive ? 'text-green-400' : 'text-slate-400'}`} />
+                  <div className={`p-2 rounded-lg ${route.isActive ? 'bg-green-50' : 'bg-app-bg'}`}>
+                    <RouteIcon className={`w-5 h-5 ${route.isActive ? 'text-green-600' : 'text-content-secondary'}`} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">{route.name}</h3>
-                    <p className="text-sm text-slate-400">
+                    <h3 className="font-semibold text-content-primary">{route.name}</h3>
+                    <p className="text-sm text-content-secondary">
                       {route.stops?.length || 0} stops • {route.isActive ? 'Active' : 'Inactive'}
                     </p>
                   </div>
@@ -123,7 +123,7 @@ export default function ManageRoutes() {
                       e.stopPropagation();
                       navigate(`/admin/routes/builder/${route._id}`);
                     }}
-                    className="p-2 text-primary-400 hover:text-primary-300 hover:bg-primary-600/10 rounded-lg"
+                    className="p-2 text-primary hover:text-primary/80 hover:bg-primary/10 rounded-lg transition-colors"
                     title="Open Route Builder"
                   >
                     <Map className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function ManageRoutes() {
                       setEditingRoute(route);
                       setShowRouteModal(true);
                     }}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
+                    className="p-2 text-content-secondary hover:text-content-primary hover:bg-app-bg rounded-lg transition-colors"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
@@ -143,30 +143,30 @@ export default function ManageRoutes() {
                       e.stopPropagation();
                       handleDeleteRoute(route._id);
                     }}
-                    className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg"
+                    className="p-2 text-content-secondary hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                   {expandedRoute === route._id ? (
-                    <ChevronUp className="w-5 h-5 text-slate-400" />
+                    <ChevronUp className="w-5 h-5 text-content-secondary/60" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                    <ChevronDown className="w-5 h-5 text-content-secondary/60" />
                   )}
                 </div>
               </div>
 
               {/* Expanded Stops */}
               {expandedRoute === route._id && (
-                <div className="mt-4 pt-4 border-t border-slate-700">
+                <div className="mt-4 pt-4 border-t border-ui-border">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium text-slate-400">Stops</h4>
+                    <h4 className="text-sm font-bold text-content-secondary uppercase tracking-wider">Stops</h4>
                     <button
                       onClick={() => {
                         setSelectedRouteForStop(route._id);
                         setEditingStop(null);
                         setShowStopModal(true);
                       }}
-                      className="text-sm text-primary-400 hover:text-primary-300 flex items-center gap-1"
+                      className="text-sm text-primary hover:text-primary/80 font-semibold flex items-center gap-1"
                     >
                       <Plus className="w-4 h-4" />
                       Add Stop
@@ -174,21 +174,21 @@ export default function ManageRoutes() {
                   </div>
 
                   {(!route.stops || route.stops.length === 0) ? (
-                    <p className="text-slate-500 text-sm">No stops added yet</p>
+                    <p className="text-content-secondary/60 text-sm">No stops added yet</p>
                   ) : (
                     <div className="space-y-2">
                       {route.stops.map((stop, index) => (
                         <div
                           key={stop._id}
-                          className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
+                          className="flex items-center justify-between p-3 bg-app-bg/50 border border-ui-border rounded-lg"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center text-xs font-medium text-white">
+                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white shadow-sm">
                               {index + 1}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-white">{stop.name}</div>
-                              <div className="text-xs text-slate-500">
+                              <div className="text-sm font-semibold text-content-primary">{stop.name}</div>
+                              <div className="text-xs text-content-secondary/70">
                                 {stop.latitude.toFixed(4)}, {stop.longitude.toFixed(4)}
                               </div>
                             </div>
@@ -200,13 +200,13 @@ export default function ManageRoutes() {
                                 setEditingStop(stop);
                                 setShowStopModal(true);
                               }}
-                              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded"
+                              className="p-1.5 text-content-secondary hover:text-content-primary hover:bg-white rounded transition-colors"
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteStop(stop._id)}
-                              className="p-1.5 text-red-400 hover:bg-red-400/10 rounded"
+                              className="p-1.5 text-content-secondary hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -281,14 +281,14 @@ function RouteModal({ route, onClose, onSuccess }: RouteModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="card max-w-md w-full">
-        <h2 className="text-xl font-semibold text-white mb-6">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="card max-w-md w-full shadow-2xl">
+        <h2 className="text-xl font-display font-bold text-content-primary mb-6">
           {route ? 'Edit Route' : 'Create Route'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Route Name
             </label>
             <input
@@ -301,7 +301,7 @@ function RouteModal({ route, onClose, onSuccess }: RouteModalProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Description (Optional)
             </label>
             <input
@@ -314,22 +314,22 @@ function RouteModal({ route, onClose, onSuccess }: RouteModalProps) {
           </div>
           {route && (
             <div>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-primary-600 focus:ring-primary-500"
+                  className="w-4 h-4 rounded border-ui-border text-primary focus:ring-primary"
                 />
-                <span className="text-slate-300">Route is active</span>
+                <span className="text-content-secondary group-hover:text-content-primary transition-colors font-medium">Route is active</span>
               </label>
             </div>
           )}
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="btn btn-secondary flex-1">
+            <button type="button" onClick={onClose} className="btn-secondary h-[46px] flex-1">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="btn btn-primary flex-1">
+            <button type="submit" disabled={saving} className="btn-coral h-[46px] flex-1">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save'}
             </button>
           </div>
@@ -383,14 +383,14 @@ function StopModal({ routeId, stop, existingStopsCount, onClose, onSuccess }: St
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="card max-w-md w-full">
-        <h2 className="text-xl font-semibold text-white mb-6">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="card max-w-md w-full shadow-2xl">
+        <h2 className="text-xl font-display font-bold text-content-primary mb-6">
           {stop ? 'Edit Stop' : 'Add Stop'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Stop Name
             </label>
             <input
@@ -404,7 +404,7 @@ function StopModal({ routeId, stop, existingStopsCount, onClose, onSuccess }: St
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-content-primary mb-2">
                 Latitude
               </label>
               <input
@@ -418,7 +418,7 @@ function StopModal({ routeId, stop, existingStopsCount, onClose, onSuccess }: St
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-content-primary mb-2">
                 Longitude
               </label>
               <input
@@ -433,7 +433,7 @@ function StopModal({ routeId, stop, existingStopsCount, onClose, onSuccess }: St
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-content-primary mb-2">
               Sequence (Order)
             </label>
             <input
@@ -446,10 +446,10 @@ function StopModal({ routeId, stop, existingStopsCount, onClose, onSuccess }: St
             />
           </div>
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="btn btn-secondary flex-1">
+            <button type="button" onClick={onClose} className="btn-secondary h-[46px] flex-1">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="btn btn-primary flex-1">
+            <button type="submit" disabled={saving} className="btn-coral h-[46px] flex-1">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save'}
             </button>
           </div>

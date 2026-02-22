@@ -57,7 +57,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -65,7 +65,7 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-400">Failed to load dashboard</p>
+        <p className="text-content-secondary">Failed to load dashboard</p>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-display font-bold text-white">Dashboard</h1>
+      <h1 className="text-2xl font-display font-bold text-content-primary">Dashboard</h1>
 
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -115,13 +115,13 @@ export default function AdminDashboard() {
       {/* Live Map & Recent Trips */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Live Map */}
-        <div className="card">
+        <div className="card shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-primary-400" />
+            <h2 className="text-lg font-semibold text-content-primary flex items-center gap-2">
+              <Navigation className="w-5 h-5 text-primary" />
               Live Buses
             </h2>
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-content-secondary">
               {liveLocations.length} active
             </span>
           </div>
@@ -156,13 +156,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Trips */}
-        <div className="card">
+        <div className="card shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary-400" />
+            <h2 className="text-lg font-semibold text-content-primary flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
               Recent Trips
             </h2>
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-content-secondary">
               {stats.trips.today} today
             </span>
           </div>
@@ -174,19 +174,19 @@ export default function AdminDashboard() {
               {recentTrips.map((trip) => (
                 <div
                   key={trip._id}
-                  className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-app-bg/50 border border-ui-border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${
-                      trip.status === 'ongoing' ? 'bg-green-500' : 'bg-slate-500'
+                      trip.status === 'ongoing' ? 'bg-green-500' : 'bg-content-secondary'
                     }`} />
                     <div>
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium text-content-primary">
                         {typeof trip.routeId === 'object'
                           ? (trip.routeId as { name: string }).name
                           : 'Unknown Route'}
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div className="text-xs text-content-secondary">
                         {typeof trip.driverId === 'object'
                           ? (trip.driverId as { name: string }).name
                           : 'Unknown Driver'}
@@ -195,8 +195,8 @@ export default function AdminDashboard() {
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     trip.status === 'ongoing'
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-slate-700 text-slate-400'
+                      ? 'bg-green-50 text-green-600 font-medium'
+                      : 'bg-app-bg text-content-secondary border border-ui-border'
                   }`}>
                     {trip.status}
                   </span>
@@ -209,37 +209,37 @@ export default function AdminDashboard() {
 
       {/* Quick Links */}
       <div className="grid sm:grid-cols-3 gap-4">
-        <Link to="/admin/users" className="card hover:bg-slate-800/50 transition-colors group">
+        <Link to="/admin/users" className="card shadow-sm hover:border-primary/30 transition-all group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary-600/20 rounded-lg">
-                <Users className="w-5 h-5 text-primary-400" />
+              <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                <Users className="w-5 h-5 text-primary" />
               </div>
-              <span className="font-medium text-white">Manage Users</span>
+              <span className="font-semibold text-content-primary">Manage Users</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-primary-400" />
+            <ChevronRight className="w-5 h-5 text-content-secondary/40 group-hover:text-primary transition-colors" />
           </div>
         </Link>
-        <Link to="/admin/routes" className="card hover:bg-slate-800/50 transition-colors group">
+        <Link to="/admin/routes" className="card shadow-sm hover:border-primary/30 transition-all group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent-600/20 rounded-lg">
-                <RouteIcon className="w-5 h-5 text-accent-400" />
+              <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                <RouteIcon className="w-5 h-5 text-primary" />
               </div>
-              <span className="font-medium text-white">Manage Routes</span>
+              <span className="font-semibold text-content-primary">Manage Routes</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-accent-400" />
+            <ChevronRight className="w-5 h-5 text-content-secondary/40 group-hover:text-primary transition-colors" />
           </div>
         </Link>
-        <Link to="/admin/buses" className="card hover:bg-slate-800/50 transition-colors group">
+        <Link to="/admin/buses" className="card shadow-sm hover:border-primary/30 transition-all group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-600/20 rounded-lg">
-                <Bus className="w-5 h-5 text-green-400" />
+              <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                <Bus className="w-5 h-5 text-primary" />
               </div>
-              <span className="font-medium text-white">Manage Buses</span>
+              <span className="font-semibold text-content-primary">Manage Buses</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-green-400" />
+            <ChevronRight className="w-5 h-5 text-content-secondary/40 group-hover:text-primary transition-colors" />
           </div>
         </Link>
       </div>
@@ -258,23 +258,23 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, subValue, color, link }: StatCardProps) {
   const colors = {
-    primary: 'bg-primary-600/20 text-primary-400',
-    green: 'bg-green-600/20 text-green-400',
-    amber: 'bg-amber-600/20 text-amber-400',
-    accent: 'bg-accent-600/20 text-accent-400',
+    primary: 'bg-primary/10 text-primary',
+    green: 'bg-green-50 text-green-600',
+    amber: 'bg-amber-50 text-amber-600',
+    accent: 'bg-primary/10 text-primary',
   };
 
   const content = (
-    <div className={`card ${link ? 'hover:bg-slate-800/50 transition-colors' : ''}`}>
+    <div className={`card shadow-sm ${link ? 'hover:border-primary/30 transition-all' : ''}`}>
       <div className="flex items-start justify-between mb-4">
         <div className={`p-2 rounded-lg ${colors[color]}`}>
           <Icon className="w-5 h-5" />
         </div>
-        {link && <ChevronRight className="w-5 h-5 text-slate-500" />}
+        {link && <ChevronRight className="w-5 h-5 text-content-secondary/40" />}
       </div>
-      <div className="text-3xl font-bold text-white mb-1">{value}</div>
-      <div className="text-sm text-slate-400">{label}</div>
-      {subValue && <div className="text-xs text-slate-500 mt-1">{subValue}</div>}
+      <div className="text-3xl font-bold text-content-primary mb-1">{value}</div>
+      <div className="text-sm font-semibold text-content-secondary">{label}</div>
+      {subValue && <div className="text-xs text-content-secondary/70 mt-1">{subValue}</div>}
     </div>
   );
 

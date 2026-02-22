@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  Bell,
   Smartphone,
   Mail,
   Save,
@@ -44,42 +43,42 @@ export default function Notifications () {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header */}
-      <header className='bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3 sticky top-0 z-50'>
+      <header className='bg-white border-b border-ui-border px-4 h-14 flex items-center gap-3 sticky top-0 z-50'>
         <button
           title='Back'
           onClick={() => navigate(-1)}
-          className='p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors'
+          className='p-2 -ml-2 hover:bg-app-bg rounded-lg transition-colors'
         >
-          <ArrowLeft className='w-5 h-5 text-gray-700' />
+          <ArrowLeft className='w-5 h-5 text-content-primary' />
         </button>
-        <h1 className='text-lg font-bold text-gray-900'>Notifications</h1>
+        <h1 className='text-lg font-bold text-content-primary'>Notifications</h1>
       </header>
 
       <div className='max-w-2xl mx-auto px-4 py-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           {/* Push Notifications */}
-          <div className='bg-white rounded-2xl border border-gray-100 p-6'>
+          <div className='bg-white rounded-2xl border border-ui-border p-6 shadow-sm'>
             <div className='flex items-center gap-3 mb-4'>
-              <div className='p-2 bg-primary-100 rounded-lg'>
-                <Smartphone className='w-5 h-5 text-primary-600' />
+              <div className='p-2 bg-primary/10 rounded-lg'>
+                <Smartphone className='w-5 h-5 text-primary' />
               </div>
               <div>
-                <h3 className='text-lg font-semibold text-gray-900'>
+                <h3 className='text-lg font-semibold text-content-primary'>
                   Push Notifications
                 </h3>
-                <p className='text-sm text-gray-500'>
+                <p className='text-sm text-content-secondary'>
                   Receive notifications on your device
                 </p>
               </div>
             </div>
 
             <div className='space-y-3'>
-              <label className='flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors'>
+              <label className='flex items-center justify-between p-3 bg-app-bg rounded-lg cursor-pointer hover:bg-ui-border/30 transition-colors border border-ui-border/50'>
                 <div>
-                  <p className='text-sm font-medium text-gray-900'>
+                  <p className='text-sm font-medium text-content-primary'>
                     Enable Push Notifications
                   </p>
-                  <p className='text-xs text-gray-500'>
+                  <p className='text-xs text-content-secondary'>
                     Receive real-time updates on your device
                   </p>
                 </div>
@@ -87,16 +86,16 @@ export default function Notifications () {
                   type='checkbox'
                   checked={settings.pushNotifications}
                   onChange={() => toggleSetting('pushNotifications')}
-                  className='w-5 h-5 text-coral-500 rounded focus:ring-coral-500'
+                  className='w-5 h-5 text-primary rounded focus:ring-primary'
                 />
               </label>
 
-              <label className='flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors'>
+              <label className='flex items-center justify-between p-3 bg-app-bg rounded-lg cursor-pointer hover:bg-ui-border/30 transition-colors border border-ui-border/50'>
                 <div>
-                  <p className='text-sm font-medium text-gray-900'>
+                  <p className='text-sm font-medium text-content-primary'>
                     Bus Approaching
                   </p>
-                  <p className='text-xs text-gray-500'>
+                  <p className='text-xs text-content-secondary'>
                     Get notified when your bus is nearby
                   </p>
                 </div>
@@ -105,16 +104,16 @@ export default function Notifications () {
                   checked={settings.busApproaching}
                   onChange={() => toggleSetting('busApproaching')}
                   disabled={!settings.pushNotifications}
-                  className='w-5 h-5 text-coral-500 rounded focus:ring-coral-500 disabled:opacity-50'
+                  className='w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50'
                 />
               </label>
 
-              <label className='flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors'>
+              <label className='flex items-center justify-between p-3 bg-app-bg rounded-lg cursor-pointer hover:bg-ui-border/30 transition-colors border border-ui-border/50'>
                 <div>
-                  <p className='text-sm font-medium text-gray-900'>
+                  <p className='text-sm font-medium text-content-primary'>
                     Route Updates
                   </p>
-                  <p className='text-xs text-gray-500'>
+                  <p className='text-xs text-content-secondary'>
                     Notifications about route changes or delays
                   </p>
                 </div>
@@ -123,35 +122,35 @@ export default function Notifications () {
                   checked={settings.routeUpdates}
                   onChange={() => toggleSetting('routeUpdates')}
                   disabled={!settings.pushNotifications}
-                  className='w-5 h-5 text-coral-500 rounded focus:ring-coral-500 disabled:opacity-50'
+                  className='w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50'
                 />
               </label>
             </div>
           </div>
 
           {/* Email Notifications */}
-          <div className='bg-white rounded-2xl border border-gray-100 p-6'>
+          <div className='bg-white rounded-2xl border border-ui-border p-6 shadow-sm'>
             <div className='flex items-center gap-3 mb-4'>
-              <div className='p-2 bg-coral-100 rounded-lg'>
-                <Mail className='w-5 h-5 text-coral-600' />
+              <div className='p-2 bg-primary/10 rounded-lg'>
+                <Mail className='w-5 h-5 text-primary' />
               </div>
               <div>
-                <h3 className='text-lg font-semibold text-gray-900'>
+                <h3 className='text-lg font-semibold text-content-primary'>
                   Email Notifications
                 </h3>
-                <p className='text-sm text-gray-500'>
+                <p className='text-sm text-content-secondary'>
                   Receive updates via email
                 </p>
               </div>
             </div>
 
             <div className='space-y-3'>
-              <label className='flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors'>
+              <label className='flex items-center justify-between p-3 bg-app-bg rounded-lg cursor-pointer hover:bg-ui-border/30 transition-colors border border-ui-border/50'>
                 <div>
-                  <p className='text-sm font-medium text-gray-900'>
+                  <p className='text-sm font-medium text-content-primary'>
                     Enable Email Notifications
                   </p>
-                  <p className='text-xs text-gray-500'>
+                  <p className='text-xs text-content-secondary'>
                     Receive updates in your inbox
                   </p>
                 </div>
@@ -159,16 +158,16 @@ export default function Notifications () {
                   type='checkbox'
                   checked={settings.emailNotifications}
                   onChange={() => toggleSetting('emailNotifications')}
-                  className='w-5 h-5 text-coral-500 rounded focus:ring-coral-500'
+                  className='w-5 h-5 text-primary rounded focus:ring-primary'
                 />
               </label>
 
-              <label className='flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors'>
+              <label className='flex items-center justify-between p-3 bg-app-bg rounded-lg cursor-pointer hover:bg-ui-border/30 transition-colors border border-ui-border/50'>
                 <div>
-                  <p className='text-sm font-medium text-gray-900'>
+                  <p className='text-sm font-medium text-content-primary'>
                     System Announcements
                   </p>
-                  <p className='text-xs text-gray-500'>
+                  <p className='text-xs text-content-secondary'>
                     Important updates and announcements
                   </p>
                 </div>
@@ -177,7 +176,7 @@ export default function Notifications () {
                   checked={settings.systemAnnouncements}
                   onChange={() => toggleSetting('systemAnnouncements')}
                   disabled={!settings.emailNotifications}
-                  className='w-5 h-5 text-coral-500 rounded focus:ring-coral-500 disabled:opacity-50'
+                  className='w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50'
                 />
               </label>
             </div>
@@ -199,14 +198,14 @@ export default function Notifications () {
               type='button'
               title='Cancel'
               onClick={() => navigate(-1)}
-              className='btn btn-secondary flex-1'
+              className='btn-secondary flex-1'
             >
               Cancel
             </button>
             <button
               type='submit'
               disabled={loading}
-              className='btn btn-coral flex-1'
+              className='btn-coral flex-1'
             >
               {loading ? (
                 <>
