@@ -33,8 +33,10 @@ export function riderHandlers(
 
       // Send current bus locations on this route
       const activeBuses = await getActiveBusesOnRoute(routeId);
+      console.log(`[Rider] 🚌 User ${socket.userId} joined route ${routeId} — ${activeBuses.length} active bus(es) in cache`);
       
       for (const bus of activeBuses) {
+        console.log(`[Rider]   → Sending cached location for bus ${bus.busId}: lat=${bus.latitude}, lng=${bus.longitude}`);
         socket.emit('bus:location', {
           busId: bus.busId,
           routeId: bus.routeId,

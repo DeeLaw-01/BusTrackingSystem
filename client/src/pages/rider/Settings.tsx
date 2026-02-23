@@ -32,6 +32,8 @@ export default function Settings () {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showUrlInput, setShowUrlInput] = useState(false)
+  const [urlInputValue, setUrlInputValue] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -167,10 +169,7 @@ export default function Settings () {
                   />
                 </label>
                 <button
-                  onClick={() => {
-                    const url = prompt('Enter image URL:')
-                    if (url) handleAvatarUrlChange(url)
-                  }}
+                  onClick={() => setShowUrlInput(prev => !prev)}
                   disabled={uploading}
                   className='btn btn-secondary text-sm disabled:opacity-50'
                 >
@@ -187,6 +186,39 @@ export default function Settings () {
                   </button>
                 )}
               </div>
+
+              {/* Inline URL Input */}
+              {showUrlInput && (
+                <div className='mt-3 flex gap-2'>
+                  <input
+                    type='url'
+                    value={urlInputValue}
+                    onChange={e => setUrlInputValue(e.target.value)}
+                    placeholder='https://example.com/image.jpg'
+                    className='input-auth flex-1 text-sm'
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => {
+                      if (urlInputValue.trim()) {
+                        handleAvatarUrlChange(urlInputValue.trim())
+                        setUrlInputValue('')
+                        setShowUrlInput(false)
+                      }
+                    }}
+                    disabled={!urlInputValue.trim()}
+                    className='btn btn-coral text-sm px-4 disabled:opacity-50'
+                  >
+                    Apply
+                  </button>
+                  <button
+                    onClick={() => { setShowUrlInput(false); setUrlInputValue('') }}
+                    className='btn btn-secondary text-sm px-3'
+                  >
+                    <X className='w-4 h-4' />
+                  </button>
+                </div>
+              )}
 
               {/* Upload Progress */}
               {uploading && (

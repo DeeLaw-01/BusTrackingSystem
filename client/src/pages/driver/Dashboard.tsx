@@ -61,7 +61,15 @@ export default function DriverDashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="relative overflow-hidden min-h-screen">
+      {/* Decorative Bus Silhouette */}
+      <img 
+        src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/The_Red_Metro_Bus_in_Blue_Area.jpg/1280px-The_Red_Metro_Bus_in_Blue_Area.jpg" 
+        alt="" 
+        className="absolute top-1/2 right-[-100px] w-[500px] opacity-[0.02] pointer-events-none select-none z-0 rotate-12" 
+      />
+
+      <div className="max-w-4xl mx-auto p-4 relative z-10">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-content-primary mb-2">
@@ -74,12 +82,12 @@ export default function DriverDashboard() {
 
       {/* No Bus Assigned */}
       {!assignedBus && (
-        <div className="card bg-amber-500/10 border-amber-500/20 mb-8">
+        <div className="card bg-amber-50 border-amber-200 mb-8">
           <div className="flex items-start gap-4">
-            <AlertCircle className="w-6 h-6 text-amber-400 flex-shrink-0" />
+            <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
             <div>
-              <h3 className="font-semibold text-amber-400 mb-1">No Bus Assigned</h3>
-              <p className="text-slate-300 text-sm">
+              <h3 className="font-semibold text-amber-600 mb-1">No Bus Assigned</h3>
+              <p className="text-content-secondary text-sm">
                 You don't have a bus assigned to you yet. Please contact your administrator.
               </p>
             </div>
@@ -122,19 +130,19 @@ export default function DriverDashboard() {
 
       {/* Current Trip / Start Trip */}
       {assignedBus && (
-        <div className="card mb-8 bg-gradient-to-r from-primary-600/20 to-accent-600/20 border-primary-500/30">
+        <div className="card mb-8 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           {currentTrip ? (
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  <span className="text-sm font-medium text-green-400">Trip in Progress</span>
+                  <span className="text-sm font-medium text-green-600">Trip in Progress</span>
                 </div>
-                <p className="text-slate-300">
+                <p className="text-content-secondary">
                   You have an active trip. Continue broadcasting your location.
                 </p>
               </div>
-              <Link to="/driver/trip" className="btn btn-primary">
+              <Link to="/driver/trip" className="btn btn-coral">
                 <Navigation className="w-5 h-5" />
                 View Trip
               </Link>
@@ -142,12 +150,12 @@ export default function DriverDashboard() {
           ) : (
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-1">Ready to start?</h3>
-                <p className="text-slate-300">
+                <h3 className="text-lg font-semibold text-content-primary mb-1">Ready to start?</h3>
+                <p className="text-content-secondary">
                   Begin your trip to start sharing your location with riders.
                 </p>
               </div>
-              <Link to="/driver/trip" className="btn btn-primary">
+              <Link to="/driver/trip" className="btn btn-coral">
                 <Navigation className="w-5 h-5" />
                 Start Trip
               </Link>
@@ -158,31 +166,31 @@ export default function DriverDashboard() {
 
       {/* Recent Trips */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-primary-400" />
+        <h2 className="text-lg font-semibold text-content-primary mb-4 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-primary" />
           Recent Trips
         </h2>
 
         {recentTrips.length === 0 ? (
-          <p className="text-slate-400 text-center py-8">No trips yet</p>
+          <p className="text-content-secondary text-center py-8">No trips yet</p>
         ) : (
           <div className="space-y-3">
             {recentTrips.map((trip) => (
               <div
                 key={trip._id}
-                className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-app-bg/50 border border-ui-border rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${
                     trip.status === 'ongoing' ? 'bg-green-500' : 'bg-slate-500'
                   }`} />
                   <div>
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-content-primary">
                       {typeof trip.routeId === 'object' 
                         ? (trip.routeId as { name: string }).name 
                         : 'Unknown Route'}
                     </div>
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-content-secondary">
                       {new Date(trip.startTime).toLocaleDateString()} at{' '}
                       {new Date(trip.startTime).toLocaleTimeString()}
                     </div>
@@ -190,8 +198,8 @@ export default function DriverDashboard() {
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${
                   trip.status === 'ongoing'
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-slate-700 text-slate-400'
+                    ? 'bg-green-50 text-green-600 font-medium'
+                    : 'bg-app-bg text-content-secondary border border-ui-border'
                 }`}>
                   {trip.status}
                 </span>
@@ -199,6 +207,7 @@ export default function DriverDashboard() {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

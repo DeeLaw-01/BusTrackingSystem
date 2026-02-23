@@ -732,7 +732,7 @@ export default function RouteBuilder () {
             <ArrowLeft className='w-5 h-5' />
           </button>
           <div>
-            <h1 className='text-xl font-display font-bold text-content-primary'>
+            <h1 className='admin-header text-xl'>
               Route Builder
             </h1>
             <p className='text-sm text-content-secondary'>{route.name}</p>

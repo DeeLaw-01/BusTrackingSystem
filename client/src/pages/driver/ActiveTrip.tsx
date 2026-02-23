@@ -220,6 +220,7 @@ export default function ActiveTrip() {
   const [ending, setEnding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [followMode, setFollowMode] = useState(true)
+  const [showEndTripConfirm, setShowEndTripConfirm] = useState(false)
 
   // Location state
   const [position, setPosition] = useState<[number, number] | null>(null)
@@ -235,11 +236,20 @@ export default function ActiveTrip() {
   const lastSendTimeRef = useRef(0)
 
   useEffect(() => {
+    // Ensure socket is connected — driver may navigate here directly
+    const token = localStorage.getItem('token')
+    if (token) {
+      socketService.connect(token)
+      console.log('[ActiveTrip] 🔌 Socket connect called, already connected?', socketService.isConnected())
+    } else {
+      console.warn('[ActiveTrip] ⚠️ No token found — socket cannot connect')
+    }
+
     loadData()
 
     // Listen for trip end events (e.g., if admin ends the trip)
     const unsubTripEnded = socketService.onTripEnded((data) => {
-      console.log('Trip ended event received:', data)
+      console.log('[ActiveTrip] 🏁 Trip ended event received:', data)
       // Stop location tracking and navigate back
       stopLocationTracking()
       setTripActive(false)
@@ -249,7 +259,7 @@ export default function ActiveTrip() {
     // Listen for socket errors
     const handleError = (error: unknown) => {
       const err = error as { message?: string }
-      console.error('Socket error:', err.message || 'Unknown error')
+      console.error('[ActiveTrip] ❌ Socket error:', err.message || 'Unknown error')
       setError(err.message || 'An error occurred')
     }
 
@@ -322,6 +332,7 @@ export default function ActiveTrip() {
         const now = Date.now()
         if (now - lastSendTimeRef.current >= 3000) {
           lastSendTimeRef.current = now
+          console.log(`[ActiveTrip] 📍 Sending location: lat=${newPos[0].toFixed(5)}, lng=${newPos[1].toFixed(5)}, connected=${socketService.isConnected()}`)
           socketService.sendLocation(newPos[0], newPos[1], spd, hdg)
         }
       },
@@ -374,6 +385,7 @@ export default function ActiveTrip() {
     setError(null)
 
     try {
+      console.log(`[ActiveTrip] 🚌 Starting trip: busId=${bus._id}, routeId=${routeId}, socketConnected=${socketService.isConnected()}`)
       socketService.startTrip(bus._id, routeId)
       setTripActive(true)
       startLocationTracking()
@@ -386,8 +398,6 @@ export default function ActiveTrip() {
   }
 
   const handleEndTrip = async () => {
-    if (!confirm('Are you sure you want to end this trip?')) return
-
     setEnding(true)
     try {
       socketService.endTrip()
@@ -658,7 +668,7 @@ export default function ActiveTrip() {
                   Upcoming stops
                 </span>
                 <button
-                  onClick={handleEndTrip}
+                  onClick={() => setShowEndTripConfirm(true)}
                   disabled={ending}
                   className='flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors'
                 >
@@ -703,6 +713,30 @@ export default function ActiveTrip() {
           </div>
         )}
       </div>
+
+      {/* End Trip Confirmation Modal */}
+      {showEndTripConfirm && (
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[2000] p-4'>
+          <div className='bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl'>
+            <h3 className='text-lg font-bold text-content-primary mb-2'>End Trip?</h3>
+            <p className='text-content-secondary text-sm mb-6'>Are you sure you want to end this trip? This cannot be undone.</p>
+            <div className='flex gap-3'>
+              <button
+                onClick={() => setShowEndTripConfirm(false)}
+                className='flex-1 px-4 py-3 rounded-xl border border-ui-border text-content-primary font-semibold hover:bg-app-bg transition-colors'
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowEndTripConfirm(false); handleEndTrip(); }}
+                className='flex-1 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors'
+              >
+                End Trip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

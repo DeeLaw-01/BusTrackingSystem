@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -13,14 +13,25 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { adminApi } from '@/services/api'
+import { socketService } from '@/services/socket'
 import type { DashboardStats, Trip, BusLocation } from '@/types'
 import 'leaflet/dist/leaflet.css';
 
 // Custom bus icon
 const busIcon = L.divIcon({
   className: 'bus-marker',
-  html: `<div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+  html: `<div style="
+    width: 32px; 
+    height: 32px; 
+    background-color: #22c55e; 
+    border-radius: 9999px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
+    border: 2px solid white;
+  ">
+    <svg style="width: 16px; height: 16px; color: white;" fill="currentColor" viewBox="0 0 24 24">
       <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10z"/>
     </svg>
   </div>`,
@@ -32,6 +43,38 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentTrips, setRecentTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  // Real-time bus locations — merges REST poll + live socket updates
+  const [liveBusMap, setLiveBusMap] = useState<Map<string, BusLocation>>(new Map());
+
+  const updateBusLocation = useCallback((loc: BusLocation) => {
+    setLiveBusMap(prev => {
+      const next = new Map(prev);
+      next.set(loc.busId, loc);
+      return next;
+    });
+  }, []);
+
+  const removeBus = useCallback((busId: string) => {
+    setLiveBusMap(prev => {
+      const next = new Map(prev);
+      next.delete(busId);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    // Connect socket as admin to receive live bus events
+    const token = localStorage.getItem('token');
+    if (token) socketService.connect(token);
+
+    const unsubLocation = socketService.onBusLocation(updateBusLocation);
+    const unsubTripEnded = socketService.onTripEnded((data) => removeBus(data.busId));
+
+    return () => {
+      unsubLocation();
+      unsubTripEnded();
+    };
+  }, [updateBusLocation, removeBus]);
 
   useEffect(() => {
     loadData();
@@ -45,8 +88,19 @@ export default function AdminDashboard() {
         adminApi.getDashboard(),
         adminApi.getRecentTrips(5),
       ]);
-      setStats(statsRes.data.data);
+      const data: DashboardStats = statsRes.data.data;
+      setStats(data);
       setRecentTrips(tripsRes.data.data);
+      // Seed map from REST snapshot (fills in buses not yet received via socket)
+      if (data.liveLocations?.length) {
+        setLiveBusMap(prev => {
+          const next = new Map(prev);
+          data.liveLocations.forEach(loc => {
+            if (!next.has(loc.busId)) next.set(loc.busId, loc);
+          });
+          return next;
+        });
+      }
     } catch (error) {
       console.error('Failed to load dashboard:', error);
     } finally {
@@ -70,14 +124,14 @@ export default function AdminDashboard() {
     );
   }
 
-  const liveLocations = stats.liveLocations || [];
+  const liveLocations = Array.from(liveBusMap.values());
   const mapCenter: [number, number] = liveLocations.length > 0
     ? [liveLocations[0].latitude, liveLocations[0].longitude]
     : [31.5204, 74.3587]; // Default to Lahore
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-display font-bold text-content-primary">Dashboard</h1>
+    <div className="space-y-6 relative">
+      <h1 className="admin-header text-2xl relative z-10">Dashboard</h1>
 
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -98,9 +152,9 @@ export default function AdminDashboard() {
         />
         <StatCard
           icon={Bus}
-          label="Active Buses"
-          value={stats.buses.live}
-          subValue={`of ${stats.buses.total} total`}
+          label="Live Trips"
+          value={stats.trips.ongoing}
+          subValue={`${stats.buses.active} buses enabled`}
           color="green"
         />
         <StatCard
@@ -144,9 +198,18 @@ export default function AdminDashboard() {
                   icon={busIcon}
                 >
                   <Popup>
-                    <div className="text-sm">
-                      <div className="font-semibold">Bus {bus.busId.slice(-6)}</div>
-                      {bus.speed && <div>{Math.round(bus.speed)} km/h</div>}
+                    <div className="p-1 min-w-[100px]">
+                      <div className="text-xs font-medium text-content-secondary uppercase tracking-wider mb-1">Live Bus</div>
+                      <div className="text-sm font-bold text-content-primary mb-2 flex items-center gap-1.5">
+                        <Bus className="w-3.5 h-3.5 text-primary" />
+                        ID: {bus.busId.slice(-6)}
+                      </div>
+                      {bus.speed !== undefined && (
+                        <div className="flex items-center gap-2 text-xs font-semibold bg-primary/5 text-primary px-2 py-1 rounded-md">
+                          <Navigation className="w-3 h-3" />
+                          {Math.round(bus.speed)} km/h
+                        </div>
+                      )}
                     </div>
                   </Popup>
                 </Marker>

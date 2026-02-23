@@ -12,12 +12,23 @@ import {
 export default function Notifications () {
   const navigate = useNavigate()
 
-  const [settings, setSettings] = useState({
+  const STORAGE_KEY = 'safara_notification_settings'
+
+  const defaultSettings = {
     pushNotifications: true,
     emailNotifications: true,
     busApproaching: true,
     routeUpdates: true,
     systemAnnouncements: false
+  }
+
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings
+    } catch {
+      return defaultSettings
+    }
   })
 
   const [loading, setLoading] = useState(false)
@@ -28,16 +39,19 @@ export default function Notifications () {
     setLoading(true)
     setSuccess(false)
 
-    // TODO: Save to backend
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    setLoading(false)
-    setSuccess(true)
-    setTimeout(() => setSuccess(false), 3000)
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+      // Small delay so the loader is briefly visible for feedback
+      await new Promise(resolve => setTimeout(resolve, 400))
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const toggleSetting = (key: keyof typeof settings) => {
-    setSettings(prev => ({ ...prev, [key]: !prev[key] }))
+  const toggleSetting = (key: keyof typeof defaultSettings) => {
+    setSettings((prev: typeof defaultSettings) => ({ ...prev, [key]: !prev[key] }))
   }
 
   return (

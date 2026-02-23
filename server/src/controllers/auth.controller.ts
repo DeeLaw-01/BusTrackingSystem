@@ -155,8 +155,8 @@ export const sendRegisterOtp = async (
       existing.name = name
       existing.password = password // pre-save hook will hash it
       existing.phone = phone
-      existing.role = UserRole.RIDER
-      existing.isApproved = true
+      existing.role = (invitation.role as UserRole) || UserRole.RIDER
+      existing.isApproved = invitation.role === UserRole.RIDER
       await existing.save()
     } else {
       // Create new unverified user
@@ -165,8 +165,8 @@ export const sendRegisterOtp = async (
         password,
         name,
         phone,
-        role: UserRole.RIDER,
-        isApproved: true,
+        role: (invitation.role as UserRole) || UserRole.RIDER,
+        isApproved: invitation.role === UserRole.RIDER,
         isEmailVerified: false
       })
     }

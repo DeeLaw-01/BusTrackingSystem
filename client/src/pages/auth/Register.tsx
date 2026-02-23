@@ -387,7 +387,7 @@ export default function Register () {
       <div>
         <h2 className='text-2xl font-bold text-content-primary'>Create Account</h2>
         <p className='text-content-secondary text-sm mt-1'>
-          Complete your registration to join BusTrack
+          Complete your registration to join Safara
         </p>
       </div>
 

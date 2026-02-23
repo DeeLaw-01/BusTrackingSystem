@@ -207,10 +207,10 @@ export const adminApi = {
     api.patch(`/admin/users/${id}/role`, { role }),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
   // Invitations
-  createInvitation: (email: string) =>
-    api.post('/admin/invitations', { email }),
-  createBatchInvitations: (emails: string[]) =>
-    api.post('/admin/invitations/batch', { emails }),
+  createInvitation: (email: string, role: string = 'rider') =>
+    api.post('/admin/invitations', { email, role }),
+  createBatchInvitations: (emails: string[], role: string = 'rider') =>
+    api.post('/admin/invitations/batch', { emails, role }),
   listInvitations: (params?: {
     status?: string
     limit?: number

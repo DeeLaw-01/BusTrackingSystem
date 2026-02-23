@@ -11,6 +11,12 @@ import {
 import { busesApi, routesApi, adminApi } from '@/services/api'
 import type { Bus as BusType, Route, User as UserType } from '@/types'
 
+interface ConfirmState {
+  open: boolean
+  message: string
+  onConfirm: () => void
+}
+
 export default function ManageBuses() {
   const [buses, setBuses] = useState<BusType[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -18,6 +24,11 @@ export default function ManageBuses() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingBus, setEditingBus] = useState<BusType | null>(null);
+  const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false, message: '', onConfirm: () => {} });
+
+  const askConfirm = (message: string, onConfirm: () => void) =>
+    setConfirmState({ open: true, message, onConfirm });
+  const closeConfirm = () => setConfirmState(c => ({ ...c, open: false }));
 
   useEffect(() => {
     loadData();
@@ -40,14 +51,16 @@ export default function ManageBuses() {
     }
   };
 
-  const handleDeleteBus = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this bus?')) return;
-    try {
-      await busesApi.delete(id);
-      loadData();
-    } catch (error) {
-      console.error('Failed to delete bus:', error);
-    }
+  const handleDeleteBus = (id: string) => {
+    askConfirm('Are you sure you want to delete this bus?', async () => {
+      closeConfirm();
+      try {
+        await busesApi.delete(id);
+        loadData();
+      } catch (error) {
+        console.error('Failed to delete bus:', error);
+      }
+    });
   };
 
   if (loading) {
@@ -61,7 +74,7 @@ export default function ManageBuses() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-content-primary">Manage Buses</h1>
+        <h1 className="admin-header text-2xl">Manage Buses</h1>
         <button
           onClick={() => {
             setEditingBus(null);
@@ -106,7 +119,7 @@ export default function ManageBuses() {
                         setEditingBus(bus);
                         setShowModal(true);
                       }}
-                      className="p-2 text-content-secondary hover:text-content-primary hover:bg-app-bg rounded-lg transition-colors"
+                      className="p-2 text-content-secondary hover:text-content-primary hover:bg-white/40 rounded-lg transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -119,22 +132,33 @@ export default function ManageBuses() {
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-content-primary mb-1">{bus.name}</h3>
-                <p className="text-sm text-content-secondary mb-4">{bus.plateNumber}</p>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-content-secondary">
-                    <RouteIcon className="w-4 h-4 opacity-70" />
-                    <span className="font-medium">{route?.name || 'No route assigned'}</span>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="p-4 bg-white/40 rounded-lg border border-ui-border">
+                    <div className="text-sm text-content-secondary mb-1">Bus Name</div>
+                    <div className="text-lg font-semibold text-content-primary">{bus.name}</div>
                   </div>
-                  <div className="flex items-center gap-2 text-content-secondary">
-                    <User className="w-4 h-4 opacity-70" />
-                    <span className="font-medium">{driver?.name || 'No driver assigned'}</span>
+                  <div className="p-4 bg-white/40 rounded-lg border border-ui-border">
+                    <div className="text-sm text-content-secondary mb-1">Plate Number</div>
+                    <div className="text-lg font-semibold text-content-primary">{bus.plateNumber}</div>
+                  </div>
+                  <div className="p-4 bg-white/40 rounded-lg border border-ui-border">
+                    <div className="text-sm text-content-secondary mb-1">Capacity</div>
+                    <div className="text-lg font-semibold text-content-primary">{bus.capacity} seats</div>
+                  </div>
+                  <div className="p-4 bg-white/40 rounded-lg border border-ui-border">
+                    <div className="text-sm text-content-secondary mb-1">Route</div>
+                    <div className="text-lg font-semibold text-content-primary flex items-center gap-2">
+                      <RouteIcon className="w-4 h-4 text-primary" />
+                      {route?.name || 'Not assigned'}
+                    </div>
                   </div>
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-ui-border flex items-center justify-between text-sm">
-                  <span className="text-content-secondary/60 font-medium">Capacity: {bus.capacity}</span>
+                  <div className="flex items-center gap-2 text-content-secondary">
+                    <User className="w-4 h-4 opacity-70" />
+                    <span className="font-medium">{driver?.name || 'No driver assigned'}</span>
+                  </div>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
                     bus.isActive
                       ? 'bg-green-50 text-green-600 border border-green-100'
@@ -164,6 +188,19 @@ export default function ManageBuses() {
             loadData();
           }}
         />
+      )}
+
+      {/* Confirm Dialog */}
+      {confirmState.open && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card max-w-sm w-full shadow-2xl">
+            <p className="text-content-primary font-medium mb-6">{confirmState.message}</p>
+            <div className="flex gap-3">
+              <button onClick={closeConfirm} className="btn-secondary h-[46px] flex-1">Cancel</button>
+              <button onClick={confirmState.onConfirm} className="btn btn-danger h-[46px] flex-1">Delete</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

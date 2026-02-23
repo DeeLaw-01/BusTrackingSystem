@@ -7,6 +7,7 @@ export interface IInvitation {
   token: string
   expiresAt: Date
   status: 'pending' | 'accepted' | 'revoked'
+  role: 'rider' | 'driver'
   createdAt: Date
   updatedAt: Date
 }
@@ -39,6 +40,11 @@ const invitationSchema = new Schema<IInvitationDocument>(
       type: String,
       enum: ['pending', 'accepted', 'revoked'],
       default: 'pending',
+    },
+    role: {
+      type: String,
+      enum: ['rider', 'driver'],
+      default: 'rider',
     },
   },
   {

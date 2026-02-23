@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   HelpCircle,
-  MessageCircle,
   Mail,
   FileText,
   ChevronRight
@@ -42,59 +41,48 @@ export default function HelpSupport () {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header */}
-      <header className='bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3 sticky top-0 z-50'>
+      <header className='bg-white border-b border-ui-border px-4 h-14 flex items-center gap-3 sticky top-0 z-50'>
         <button
           title='Back'
           onClick={() => navigate(-1)}
-          className='p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors'
+          className='p-2 -ml-2 hover:bg-app-bg rounded-lg transition-colors'
         >
-          <ArrowLeft className='w-5 h-5 text-gray-700' />
+          <ArrowLeft className='w-5 h-5 text-content-primary' />
         </button>
-        <h1 className='text-lg font-bold text-gray-900'>Help & Support</h1>
+        <h1 className='text-lg font-bold text-content-primary'>Help & Support</h1>
       </header>
 
       <div className='max-w-2xl mx-auto px-4 py-6'>
         {/* Contact Options */}
-        <div className='bg-white rounded-2xl border border-gray-100 p-6 mb-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+        <div className='bg-white rounded-2xl border border-ui-border p-6 mb-6 shadow-sm'>
+          <h2 className='text-lg font-semibold text-content-primary mb-4'>
             Get in Touch
           </h2>
 
           <div className='space-y-3'>
             <a
-              href='mailto:support@bustrack.com'
-              className='flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors'
+              href='mailto:support@safara.com'
+              className='flex items-center gap-4 p-4 bg-app-bg rounded-xl hover:bg-ui-border/30 transition-colors'
             >
-              <div className='p-2 bg-coral-100 rounded-lg'>
-                <Mail className='w-5 h-5 text-coral-600' />
+              <div className='p-2 bg-primary/10 rounded-lg'>
+                <Mail className='w-5 h-5 text-primary' />
               </div>
               <div className='flex-1'>
-                <p className='text-sm font-medium text-gray-900'>
+                <p className='text-sm font-medium text-content-primary'>
                   Email Support
                 </p>
-                <p className='text-xs text-gray-500'>support@bustrack.com</p>
+                <p className='text-xs text-content-secondary'>support@safara.com</p>
               </div>
-              <ChevronRight className='w-5 h-5 text-gray-400' />
+              <ChevronRight className='w-5 h-5 text-content-secondary/60' />
             </a>
-
-            <button className='w-full flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors'>
-              <div className='p-2 bg-primary-100 rounded-lg'>
-                <MessageCircle className='w-5 h-5 text-primary-600' />
-              </div>
-              <div className='flex-1 text-left'>
-                <p className='text-sm font-medium text-gray-900'>Live Chat</p>
-                <p className='text-xs text-gray-500'>Available 24/7</p>
-              </div>
-              <ChevronRight className='w-5 h-5 text-gray-400' />
-            </button>
           </div>
         </div>
 
         {/* FAQ Section */}
-        <div className='bg-white rounded-2xl border border-gray-100 p-6 mb-6'>
+        <div className='bg-white rounded-2xl border border-ui-border p-6 mb-6 shadow-sm'>
           <div className='flex items-center gap-3 mb-4'>
-            <HelpCircle className='w-5 h-5 text-coral-500' />
-            <h2 className='text-lg font-semibold text-gray-900'>
+            <HelpCircle className='w-5 h-5 text-primary' />
+            <h2 className='text-lg font-semibold text-content-primary'>
               Frequently Asked Questions
             </h2>
           </div>
@@ -103,38 +91,38 @@ export default function HelpSupport () {
             {faqs.map((faq, index) => (
               <details
                 key={index}
-                className='group border-b border-gray-100 last:border-0 pb-4 last:pb-0'
+                className='group border-b border-ui-border last:border-0 pb-4 last:pb-0'
               >
                 <summary className='cursor-pointer list-none'>
                   <div className='flex items-center justify-between'>
-                    <p className='text-sm font-medium text-gray-900 group-open:text-coral-600 transition-colors'>
+                    <p className='text-sm font-medium text-content-primary group-open:text-primary transition-colors'>
                       {faq.question}
                     </p>
-                    <ChevronRight className='w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform' />
+                    <ChevronRight className='w-4 h-4 text-content-secondary/60 group-open:rotate-90 transition-transform' />
                   </div>
                 </summary>
-                <p className='text-sm text-gray-600 mt-2 pl-4'>{faq.answer}</p>
+                <p className='text-sm text-content-secondary mt-2 pl-4'>{faq.answer}</p>
               </details>
             ))}
           </div>
         </div>
 
         {/* Quick Links */}
-        <div className='bg-white rounded-2xl border border-gray-100 p-6'>
-          <h2 className='text-lg font-semibold text-gray-900 mb-4'>
+        <div className='bg-white rounded-2xl border border-ui-border p-6 shadow-sm'>
+          <h2 className='text-lg font-semibold text-content-primary mb-4'>
             Quick Links
           </h2>
 
           <div className='space-y-2'>
             <button
               onClick={() => navigate('/privacy')}
-              className='w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left'
+              className='w-full flex items-center gap-3 p-3 rounded-lg hover:bg-app-bg transition-colors text-left'
             >
-              <FileText className='w-5 h-5 text-gray-400' />
-              <span className='text-sm font-medium text-gray-900'>
+              <FileText className='w-5 h-5 text-content-secondary/60' />
+              <span className='text-sm font-medium text-content-primary'>
                 Privacy Policy
               </span>
-              <ChevronRight className='w-4 h-4 text-gray-400 ml-auto' />
+              <ChevronRight className='w-4 h-4 text-content-secondary/60 ml-auto' />
             </button>
           </div>
         </div>

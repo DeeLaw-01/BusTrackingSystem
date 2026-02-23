@@ -26,12 +26,10 @@ import ActiveTrip from '@/pages/driver/ActiveTrip'
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard'
-import ManageUsers from '@/pages/admin/ManageUsers'
-import ManageInvitations from '@/pages/admin/ManageInvitations'
-import ManageRoles from '@/pages/admin/ManageRoles'
 import ManageRoutes from '@/pages/admin/ManageRoutes'
 import RouteBuilder from '@/pages/admin/RouteBuilder'
 import ManageBuses from '@/pages/admin/ManageBuses'
+import UserManagement from '@/pages/admin/UserManagement'
 
 // Driver layout wrapper (reuses the old AppLayout for drivers)
 import AppLayout from '@/components/layout/AppLayout'
@@ -167,20 +165,12 @@ export default function App () {
       </Route>
 
       {/* Admin Routes */}
-      <Route
-        element={
-          <ProtectedRoute roles={['admin']}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path='/admin' element={<AdminDashboard />} />
-        <Route path='/admin/users' element={<ManageUsers />} />
-        <Route path='/admin/invitations' element={<ManageInvitations />} />
-        <Route path='/admin/roles' element={<ManageRoles />} />
-        <Route path='/admin/routes' element={<ManageRoutes />} />
-        <Route path='/admin/routes/builder/:id' element={<RouteBuilder />} />
-        <Route path='/admin/buses' element={<ManageBuses />} />
+      <Route path='/admin' element={<ProtectedRoute roles={['admin']}><AdminLayout /></ProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path='users' element={<UserManagement />} />
+        <Route path='routes' element={<ManageRoutes />} />
+        <Route path='buses' element={<ManageBuses />} />
+        <Route path='routes/:id/builder' element={<RouteBuilder />} />
       </Route>
 
       {/* Catch all */}

@@ -82,7 +82,7 @@ export function driverHandlers(
         driverId,
       });
 
-      console.log(`Trip started: ${trip._id} by driver ${driverId}`);
+      console.log(`[Driver] 🚌 Trip started: ${trip._id} by driver ${driverId}, busId=${busId}, routeId=${routeId}`);
     } catch (error) {
       console.error('Error starting trip:', error);
       socket.emit('error', { message: 'Failed to start trip' });
@@ -113,9 +113,13 @@ export function driverHandlers(
       };
 
       await setBusLocation(socket.currentBusId, locationCache);
+      console.log(`[Driver] 📍 Location stored for bus ${socket.currentBusId} on route ${socket.currentRouteId}: lat=${latitude}, lng=${longitude}`);
 
       // Broadcast to all riders watching this route
-      io.to(`route:${socket.currentRouteId}`).emit('bus:location', {
+      const roomName = `route:${socket.currentRouteId}`;
+      const roomSockets = await io.in(roomName).allSockets();
+      console.log(`[Driver] 📡 Broadcasting to room '${roomName}' — ${roomSockets.size} listener(s)`);
+      io.to(roomName).emit('bus:location', {
         busId: socket.currentBusId,
         routeId: socket.currentRouteId,
         latitude,

@@ -1,9 +1,10 @@
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
+  variant?: 'dark' | 'light';
 }
 
-export default function Logo({ size = 'md', showText = true }: LogoProps) {
+export default function Logo({ size = 'md', showText = true, variant = 'dark' }: LogoProps) {
   const sizes = {
     sm: { container: 'w-20 h-20', text: 'text-xs', gap: 'mt-1' },
     md: { container: 'w-28 h-28', text: 'text-sm', gap: 'mt-2' },
@@ -70,7 +71,7 @@ export default function Logo({ size = 'md', showText = true }: LogoProps) {
       {/* Text */}
       {showText && (
         <div className={`${sizes[size].gap} font-bold text-center tracking-wider`}>
-          <span className={`text-gray-800 ${sizes[size].text}`}>BUS SMART SYSTEM</span>
+          <span className={`${variant === 'light' ? 'text-white' : 'text-gray-800'} ${sizes[size].text}`}>SAFARA</span>
         </div>
       )}
     </div>

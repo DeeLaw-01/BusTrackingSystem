@@ -13,6 +13,12 @@ import {
 import { routesApi, stopsApi } from '@/services/api'
 import type { Route, Stop } from '@/types'
 
+interface ConfirmState {
+  open: boolean
+  message: string
+  onConfirm: () => void
+}
+
 export default function ManageRoutes() {
   const navigate = useNavigate();
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -23,6 +29,11 @@ export default function ManageRoutes() {
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [editingStop, setEditingStop] = useState<Stop | null>(null);
   const [selectedRouteForStop, setSelectedRouteForStop] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmState>({ open: false, message: '', onConfirm: () => {} });
+
+  const askConfirm = (message: string, onConfirm: () => void) =>
+    setConfirm({ open: true, message, onConfirm });
+  const closeConfirm = () => setConfirm(c => ({ ...c, open: false }));
 
   useEffect(() => {
     loadRoutes();
@@ -39,24 +50,28 @@ export default function ManageRoutes() {
     }
   };
 
-  const handleDeleteRoute = async (id: string) => {
-    if (!confirm('Are you sure? This will also delete all stops on this route.')) return;
-    try {
-      await routesApi.delete(id);
-      loadRoutes();
-    } catch (error) {
-      console.error('Failed to delete route:', error);
-    }
+  const handleDeleteRoute = (id: string) => {
+    askConfirm('Are you sure? This will also delete all stops on this route.', async () => {
+      closeConfirm();
+      try {
+        await routesApi.delete(id);
+        loadRoutes();
+      } catch (error) {
+        console.error('Failed to delete route:', error);
+      }
+    });
   };
 
-  const handleDeleteStop = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this stop?')) return;
-    try {
-      await stopsApi.delete(id);
-      loadRoutes();
-    } catch (error) {
-      console.error('Failed to delete stop:', error);
-    }
+  const handleDeleteStop = (id: string) => {
+    askConfirm('Are you sure you want to delete this stop?', async () => {
+      closeConfirm();
+      try {
+        await stopsApi.delete(id);
+        loadRoutes();
+      } catch (error) {
+        console.error('Failed to delete stop:', error);
+      }
+    });
   };
 
   if (loading) {
@@ -70,7 +85,7 @@ export default function ManageRoutes() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-content-primary">Manage Routes</h1>
+        <h1 className="admin-header text-2xl">Manage Routes</h1>
         <button
           onClick={() => {
             setEditingRoute(null);
@@ -107,7 +122,7 @@ export default function ManageRoutes() {
                 onClick={() => setExpandedRoute(expandedRoute === route._id ? null : route._id)}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-lg ${route.isActive ? 'bg-green-50' : 'bg-app-bg'}`}>
+                  <div className={`p-2 rounded-lg ${route.isActive ? 'bg-green-50' : 'bg-white/40'}`}>
                     <RouteIcon className={`w-5 h-5 ${route.isActive ? 'text-green-600' : 'text-content-secondary'}`} />
                   </div>
                   <div>
@@ -246,6 +261,19 @@ export default function ManageRoutes() {
             loadRoutes();
           }}
         />
+      )}
+
+      {/* Confirm Dialog */}
+      {confirm.open && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card max-w-sm w-full shadow-2xl">
+            <p className="text-content-primary font-medium mb-6">{confirm.message}</p>
+            <div className="flex gap-3">
+              <button onClick={closeConfirm} className="btn-secondary h-[46px] flex-1">Cancel</button>
+              <button onClick={confirm.onConfirm} className="btn btn-danger h-[46px] flex-1">Delete</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

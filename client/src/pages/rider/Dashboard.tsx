@@ -15,15 +15,11 @@ import {
   ArrowLeft,
   Loader2,
   Phone,
-  Info,
   Menu,
   X,
-  Settings,
   User,
   LogOut,
-  HelpCircle,
   Bell as BellIcon,
-  Shield,
   ChevronRight
 } from 'lucide-react'
 import { routesApi, busesApi, remindersApi } from '@/services/api'
@@ -164,6 +160,9 @@ export default function RiderDashboard () {
   const [buses, setBuses] = useState<BusWithRoute[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Socket ready state — tracks whether socket is connected and ready for room joins
+  const [isSocketReady, setIsSocketReady] = useState(false)
+
   // Selected items
   const [selectedBus, setSelectedBus] = useState<BusWithRoute | null>(null)
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
@@ -213,6 +212,10 @@ export default function RiderDashboard () {
     const token = localStorage.getItem('token')
     if (token) {
       socketService.connect(token)
+      // If already connected (e.g. page nav without unmount), mark ready immediately
+      if (socketService.isConnected()) {
+        setIsSocketReady(true)
+      }
     }
 
     const unsubLocation = socketService.onBusLocation(data => {
@@ -223,31 +226,30 @@ export default function RiderDashboard () {
       removeBus(data.busId)
     })
 
-    return () => {
-      unsubLocation()
-      unsubTripEnded()
-    }
-  }, [updateBusLocation, removeBus])
-
-  // ─── Join all route rooms for live bus updates ──────────────────────
-  useEffect(() => {
-    const joinAllRoutes = () => {
-      routes.forEach(r => socketService.joinRoute(r._id))
-    }
-
-    joinAllRoutes()
-
-    // Re-join rooms after socket reconnection (rooms are lost on disconnect)
     const unsubConnected = socketService.onConnected(() => {
-      console.log('Socket reconnected — rejoining route rooms')
-      joinAllRoutes()
+      console.log('[RiderDash] 🟢 Socket connected event fired → setIsSocketReady(true)');
+      setIsSocketReady(true)
     })
 
     return () => {
-      routes.forEach(r => socketService.leaveRoute(r._id))
+      unsubLocation()
+      unsubTripEnded()
       unsubConnected()
     }
-  }, [routes])
+  }, [updateBusLocation, removeBus])
+
+  // ─── Join all route rooms — only when socket AND routes are ready ───
+  useEffect(() => {
+    console.log(`[RiderDash] joinRoute effect: isSocketReady=${isSocketReady}, routes.length=${routes.length}`);
+    if (!isSocketReady || routes.length === 0) return
+
+    console.log('[RiderDash] ✅ Joining', routes.length, 'route rooms:', routes.map(r => r._id));
+    routes.forEach(r => socketService.joinRoute(r._id))
+
+    return () => {
+      routes.forEach(r => socketService.leaveRoute(r._id))
+    }
+  }, [isSocketReady, routes])
 
   // ─── Handlers ───────────────────────────────────────────────────────
   const handleSelectBus = (bus: BusWithRoute) => {
@@ -350,6 +352,12 @@ export default function RiderDashboard () {
         sidebarOpen ? 'sidebar-open' : ''
       }`}
     >
+      {/* Decorative Bus Silhouette */}
+      <img 
+        src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/The_Red_Metro_Bus_in_Blue_Area.jpg/1280px-The_Red_Metro_Bus_in_Blue_Area.jpg" 
+        alt="" 
+        className="absolute bottom-1/4 left-[-100px] w-[600px] opacity-[0.02] pointer-events-none select-none z-0" 
+      />
       {/* ─── Sidebar Drawer ───────────────────────────────────────── */}
       <SidebarDrawer
         open={sidebarOpen}
@@ -377,14 +385,20 @@ export default function RiderDashboard () {
             <Menu className='w-5 h-5 text-content-primary' />
           </button>
         )}
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2 flex-1'>
           <div className='p-1.5 bg-primary rounded-lg'>
             <Bus className='w-4 h-4 text-white' />
           </div>
           <h1 className='text-lg font-bold text-content-primary tracking-tight'>
-            BUS SMART SYSTEM
+            Safara
           </h1>
         </div>
+        {/* Profile avatar in header for quick access */}
+        {view === 'select' && (
+          <button onClick={() => setSidebarOpen(true)} className='shrink-0'>
+            <UserAvatar name={user?.name} avatar={user?.avatar} size='sm' />
+          </button>
+        )}
       </header>
 
       {/* ─── Map Area ───────────────────────────────────────────────── */}
@@ -540,9 +554,11 @@ export default function RiderDashboard () {
           {view === 'select' && (
             <BusSelectView
               buses={buses}
+              routes={routes}
               getRouteName={getRouteName}
               getLiveBusLocation={getLiveBusLocation}
               onSelectBus={handleSelectBus}
+              user={user}
             />
           )}
 
@@ -571,40 +587,59 @@ export default function RiderDashboard () {
 // ─── Bus Select View (Screen 1) ─────────────────────────────────────────────
 function BusSelectView ({
   buses,
+  routes,
   getRouteName,
   getLiveBusLocation,
-  onSelectBus
+  onSelectBus,
+  user
 }: {
   buses: BusWithRoute[]
+  routes: Route[]
   getRouteName: (bus: BusWithRoute) => string
   getLiveBusLocation: (busId: string) => BusLocation | undefined
   onSelectBus: (bus: BusWithRoute) => void
+  user: ReturnType<typeof useAuthStore.getState>['user']
 }) {
+  const [showInactive, setShowInactive] = useState(false)
   // Split buses into live (active trip) and inactive
   const liveBuses = buses.filter(b => getLiveBusLocation(b._id))
   const inactiveBuses = buses.filter(b => !getLiveBusLocation(b._id))
 
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const firstName = user?.name?.split(' ')[0] || 'there'
+
   return (
     <div>
-      <div className='flex items-center gap-2 mb-4'>
-        <h2 className='text-xl font-bold text-content-primary'>Select bus</h2>
-        <button className='p-1' title='Information'>
-          <Info className='w-4 h-4 text-content-secondary' />
-        </button>
+      {/* Greeting */}
+      <div className='mb-5'>
+        <p className='text-content-secondary text-sm font-medium'>{greeting}, {firstName} 👋</p>
+        <h2 className='text-xl font-bold text-content-primary mt-0.5'>Choose a bus to track</h2>
+        <p className='text-xs text-content-secondary mt-1'>
+          {liveBuses.length > 0
+            ? `${liveBuses.length} bus${liveBuses.length > 1 ? 'es' : ''} live now across ${routes.length} routes`
+            : 'No buses are currently active'}
+        </p>
       </div>
 
-      {buses.length === 0 ? (
+      {liveBuses.length === 0 && inactiveBuses.length === 0 ? (
         <div className='text-center py-12'>
           <Bus className='w-12 h-12 text-ui-border mx-auto mb-4' />
-          <p className='text-content-secondary font-medium'>No buses available</p>
+          <p className='text-content-secondary font-medium'>No buses configured</p>
           <p className='text-content-secondary/70 text-sm mt-1'>
-            Check back later for available routes
+            Contact your administrator to set up routes.
           </p>
         </div>
       ) : (
         <div className='space-y-3'>
-          {/* Live buses first */}
-          {liveBuses.map(bus => {
+          {/* Live buses */}
+          {liveBuses.length === 0 ? (
+            <div className='text-center py-8 rounded-2xl border border-dashed border-ui-border'>
+              <Bus className='w-10 h-10 text-ui-border mx-auto mb-3' />
+              <p className='text-content-secondary font-medium text-sm'>No buses are active right now</p>
+              <p className='text-content-secondary/60 text-xs mt-1'>Try again later or check the schedule.</p>
+            </div>
+          ) : liveBuses.map(bus => {
             const routeName = getRouteName(bus)
             return (
               <button
@@ -612,55 +647,66 @@ function BusSelectView ({
                 onClick={() => onSelectBus(bus)}
                 className='w-full flex items-center gap-4 p-4 rounded-2xl border border-green-100 bg-green-50/30 hover:border-primary/20 hover:bg-primary/5 transition-all group'
               >
-                <div className='w-12 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0 relative'>
+                <div className='w-12 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0'>
                   <Bus className='w-6 h-6 text-amber-600' />
                 </div>
-                <div className='flex-1 text-left'>
-                  <div className='font-semibold text-content-primary group-hover:text-primary transition-colors'>
+                <div className='flex-1 text-left min-w-0'>
+                  <div className='font-bold text-content-primary group-hover:text-primary transition-colors truncate'>
                     {bus.name}
                   </div>
-                  <div className='text-xs text-green-600 font-medium'>
-                    Live — On route
+                  <div className='text-xs text-green-600 font-semibold mt-0.5 flex items-center gap-1'>
+                    <span className='w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block' />
+                    Live on route
                   </div>
                 </div>
                 {routeName && (
-                  <span className='text-xs font-medium text-content-secondary bg-app-bg px-3 py-1 rounded-full uppercase tracking-wide'>
+                  <span className='text-xs font-semibold text-content-secondary bg-app-bg px-2.5 py-1 rounded-full shrink-0'>
                     {routeName}
                   </span>
                 )}
-                <span className='w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shrink-0' />
+                <ChevronRight className='w-4 h-4 text-ui-border group-hover:text-primary transition-colors shrink-0' />
               </button>
             )
           })}
 
-          {/* Inactive buses */}
-          {inactiveBuses.map(bus => {
-            const routeName = getRouteName(bus)
-            return (
+          {/* Inactive buses — collapsed by default */}
+          {inactiveBuses.length > 0 && (
+            <div>
               <button
-                key={bus._id}
-                onClick={() => onSelectBus(bus)}
-                className='w-full flex items-center gap-4 p-4 rounded-2xl border border-ui-border hover:border-primary/20 hover:bg-primary/5 transition-all group opacity-60'
+                onClick={() => setShowInactive(v => !v)}
+                className='w-full flex items-center justify-between px-1 py-2 text-xs font-bold text-content-secondary/60 uppercase tracking-wider hover:text-content-secondary transition-colors'
               >
-                <div className='w-12 h-10 bg-app-bg rounded-lg flex items-center justify-center shrink-0'>
-                  <Bus className='w-6 h-6 text-content-secondary/50' />
-                </div>
-                <div className='flex-1 text-left'>
-                  <div className='font-semibold text-content-secondary group-hover:text-primary transition-colors'>
-                    {bus.name}
-                  </div>
-                  <div className='text-xs text-content-secondary/70'>
-                    Not currently active
-                  </div>
-                </div>
-                {routeName && (
-                  <span className='text-xs font-medium text-content-secondary bg-app-bg px-3 py-1 rounded-full uppercase tracking-wide'>
-                    {routeName}
-                  </span>
-                )}
+                <span>Offline buses ({inactiveBuses.length})</span>
+                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showInactive ? 'rotate-90' : ''}`} />
               </button>
-            )
-          })}
+              {showInactive && (
+                <div className='space-y-2 mt-1'>
+                  {inactiveBuses.map(bus => {
+                    const routeName = getRouteName(bus)
+                    return (
+                      <div
+                        key={bus._id}
+                        className='w-full flex items-center gap-3 p-3 rounded-xl border border-ui-border/50 opacity-50'
+                      >
+                        <div className='w-10 h-9 bg-app-bg rounded-lg flex items-center justify-center shrink-0'>
+                          <Bus className='w-5 h-5 text-content-secondary/40' />
+                        </div>
+                        <div className='flex-1 text-left min-w-0'>
+                          <div className='font-semibold text-content-secondary text-sm truncate'>{bus.name}</div>
+                          <div className='text-xs text-content-secondary/50'>Not active</div>
+                        </div>
+                        {routeName && (
+                          <span className='text-[10px] font-semibold text-content-secondary/50 bg-app-bg px-2 py-0.5 rounded-full shrink-0'>
+                            {routeName}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -678,20 +724,27 @@ function RoutePreviewView ({
   onViewStops: () => void
 }) {
   const stops = route.stops || []
+  const first = 0
+  const last = stops.length - 1
 
   return (
     <div className='flex flex-col h-full'>
-      <h2 className='text-xl font-bold text-content-primary mb-4'>
-        {bus.name} - Route
-      </h2>
+      {/* Route header */}
+      <div className='mb-4'>
+        <div className='text-xs font-bold text-content-secondary uppercase tracking-wider mb-0.5'>Route Preview</div>
+        <h2 className='text-xl font-bold text-content-primary'>
+          {stops.length >= 2 ? `${stops[0].name} → ${stops[last].name}` : bus.name}
+        </h2>
+        <p className='text-xs text-content-secondary mt-1'>{stops.length} stops · {bus.name}</p>
+      </div>
 
       {/* Timeline */}
       <div className='flex-1 overflow-y-auto'>
         <div className='relative pl-6'>
-          {/* Red vertical line */}
+          {/* Connector line */}
           {stops.length > 1 && (
             <div
-              className='absolute left-[11px] top-2 bottom-2 w-0.5 bg-primary/40'
+              className='absolute left-[11px] top-2 bottom-2 w-0.5 bg-primary/20'
               style={{ zIndex: 0 }}
             />
           )}
@@ -699,22 +752,26 @@ function RoutePreviewView ({
           {stops.map((stop, index) => (
             <div
               key={stop._id}
-              className='relative flex items-start gap-4 mb-6 last:mb-0'
+              className='relative flex items-start gap-4 mb-5 last:mb-0'
             >
               {/* Dot */}
               <div
                 className={`absolute left-[-17px] top-1 w-4 h-4 rounded-full border-2 z-10 ${
-                  index === 0
-                    ? 'bg-white border-primary ring-4 ring-primary/10'
+                  index === first
+                    ? 'bg-green-500 border-green-500 ring-4 ring-green-100'
+                    : index === last
+                    ? 'bg-amber-500 border-amber-500 ring-4 ring-amber-100'
                     : 'bg-ui-border border-ui-border'
                 }`}
               />
 
               {/* Stop info */}
               <div className='flex-1 min-w-0'>
-                <div className='font-semibold text-content-primary'>{stop.name}</div>
-                <div className='text-sm text-content-secondary'>
-                  More information about the station
+                <div className={`font-semibold ${
+                  index === first ? 'text-green-700' : index === last ? 'text-amber-700' : 'text-content-primary'
+                }`}>{stop.name}</div>
+                <div className='text-xs text-content-secondary mt-0.5'>
+                  {index === first ? 'Origin' : index === last ? 'Destination' : `Stop ${stop.sequence + 1}`}
                 </div>
               </div>
             </div>
@@ -722,12 +779,13 @@ function RoutePreviewView ({
         </div>
       </div>
 
-      {/* View Stops Button */}
+      {/* Track Live CTA */}
       <button
         onClick={onViewStops}
-        className='btn-coral w-full mt-4 py-4 text-base rounded-2xl'
+        className='btn-coral w-full mt-4 py-4 text-base rounded-2xl flex items-center justify-center gap-2'
       >
-        View Stops
+        <Bus className='w-5 h-5' />
+        Track Live
       </button>
     </div>
   )
@@ -854,45 +912,42 @@ function ActiveTrackingView ({
     [reminders]
   )
 
+  const remainingStops = stops.length - 1 - currentStopIndex
+
   return (
     <div className='flex flex-col h-full'>
       {/* Driver Info Card */}
-      <div className='flex items-center gap-4 mb-6'>
-        <div className='w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center shrink-0'>
-          <svg
-            className='w-8 h-8 text-gray-400'
-            fill='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' />
-          </svg>
-        </div>
+      <div className='flex items-center gap-3 p-4 rounded-2xl bg-app-bg border border-ui-border mb-5'>
+        <UserAvatar name={driver?.name || 'Driver'} size='md' />
         <div className='flex-1 min-w-0'>
-          <div className='font-semibold text-content-primary text-base'>
-            {driver?.name || 'Driver'}
+          <div className='font-bold text-content-primary text-sm'>
+            {driver?.name || 'Unknown Driver'}
           </div>
-          {driver?.phone && (
-            <div className='text-sm text-content-secondary flex items-center gap-1'>
+          {driver?.phone ? (
+            <a href={`tel:${driver.phone}`} className='text-xs text-primary flex items-center gap-1 mt-0.5 hover:underline'>
               <Phone className='w-3 h-3' />
               {driver.phone}
-            </div>
+            </a>
+          ) : (
+            <div className='text-xs text-content-secondary/50 mt-0.5'>No contact info</div>
           )}
-          <span className='inline-block mt-1 text-xs font-medium text-white bg-primary px-2 py-0.5 rounded-full'>
-            {bus.name}
-          </span>
         </div>
-        <div className='text-right'>
-          <div className='text-xs text-content-secondary font-medium'>Next stop in</div>
-          <div className='text-3xl font-bold text-primary tabular-nums'>
-            {formatETA(etaMinutes)}
+        <div className='text-right shrink-0'>
+          <div className='text-[10px] text-content-secondary font-bold uppercase tracking-wider'>ETA</div>
+          <div className='text-2xl font-bold text-primary tabular-nums leading-none mt-0.5'>
+            {etaMinutes === 0 ? 'Now' : `${etaMinutes} min`}
           </div>
+          <div className='text-[10px] text-content-secondary mt-0.5'>{remainingStops} stop{remainingStops !== 1 ? 's' : ''} left</div>
         </div>
       </div>
 
-      {/* Route Timeline */}
-      <h3 className='text-lg font-bold text-content-primary mb-4'>
-        {bus.name} - Route
-      </h3>
+      {/* Route Timeline Header */}
+      <div className='mb-3'>
+        <div className='text-xs font-bold text-content-secondary uppercase tracking-wider'>Live Route</div>
+        <h3 className='text-base font-bold text-content-primary mt-0.5'>
+          {stops.length >= 2 ? `${stops[0].name} → ${stops[stops.length - 1].name}` : bus.name}
+        </h3>
+      </div>
 
       <div className='flex-1 overflow-y-auto'>
         <div className='relative pl-6'>
@@ -953,8 +1008,8 @@ function ActiveTrackingView ({
                     {stop.name}
                   </div>
                   {hasReminder && (
-                    <div className='text-xs text-amber-600 font-medium mt-0.5'>
-                      🔔 Alert {reminderData?.minutesBefore} min before
+                    <div className='text-xs text-amber-600 font-medium mt-0.5 flex items-center gap-1'>
+                      <BellIcon className='w-3 h-3' /> Alert {reminderData?.minutesBefore} min before
                     </div>
                   )}
                   {stop.estimatedArrivalTime && (
@@ -988,7 +1043,7 @@ function ActiveTrackingView ({
 
                     {/* Reminder popup */}
                     {reminderPopup === stop._id && (
-                      <div className='absolute right-0 top-10 z-30 bg-white rounded-xl shadow-xl border border-ui-border p-3 w-56'>
+                      <div className='absolute right-0 left-auto top-10 z-30 bg-white rounded-xl shadow-xl border border-ui-border p-3 w-56 max-w-[calc(100vw-2rem)]'>
                         <div className='text-sm font-semibold text-content-primary mb-2'>
                           Set Alert
                         </div>
@@ -1065,10 +1120,7 @@ function SidebarDrawer ({
 
   const menuItems = [
     { icon: User, label: 'My Account', path: '/account' },
-    { icon: BellIcon, label: 'Notifications', path: '/notifications' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
-    { icon: HelpCircle, label: 'Help & Support', path: '/help' },
-    { icon: Shield, label: 'Privacy Policy', path: '/privacy' }
+    { icon: BellIcon, label: 'Notifications', path: '/notifications' }
   ]
 
   return (
@@ -1151,7 +1203,7 @@ function SidebarDrawer ({
 
         {/* App version */}
         <div className='px-5 pb-4 text-center'>
-          <span className='text-xs text-ui-border font-medium'>BusTrack v1.0.0</span>
+          <span className='text-xs text-ui-border font-medium'>Safara v1.0.0</span>
         </div>
       </div>
     </>
@@ -1269,8 +1321,3 @@ function estimateETA (stops: Stop[], currentIndex: number): number {
   return remaining * 3
 }
 
-function formatETA (minutes: number): string {
-  const hrs = Math.floor(minutes / 60)
-  const mins = minutes % 60
-  return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
-}

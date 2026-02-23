@@ -238,11 +238,16 @@ const INVITATION_EXPIRY_DAYS = 7;
 
 export const createInvitation = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email } = req.body;
+    const { email, role = 'rider' } = req.body;
     const adminId = req.user?._id;
 
     if (!email) {
       res.status(400).json({ success: false, error: 'Email is required' });
+      return;
+    }
+
+    if (![UserRole.RIDER, UserRole.DRIVER].includes(role)) {
+      res.status(400).json({ success: false, error: 'Invalid role' });
       return;
     }
 
@@ -273,6 +278,7 @@ export const createInvitation = async (req: Request, res: Response): Promise<voi
       token,
       expiresAt,
       status: 'pending',
+      role,
     });
 
     // Send invitation email
@@ -291,11 +297,16 @@ export const createInvitation = async (req: Request, res: Response): Promise<voi
 
 export const createBatchInvitations = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { emails } = req.body;
+    const { emails, role = 'rider' } = req.body;
     const adminId = req.user?._id;
 
     if (!emails || !Array.isArray(emails) || emails.length === 0) {
       res.status(400).json({ success: false, error: 'Emails array is required and must not be empty' });
+      return;
+    }
+
+    if (![UserRole.RIDER, UserRole.DRIVER].includes(role)) {
+      res.status(400).json({ success: false, error: 'Invalid role' });
       return;
     }
 
@@ -360,6 +371,7 @@ export const createBatchInvitations = async (req: Request, res: Response): Promi
               token,
               expiresAt,
               status: 'pending',
+              role,
             });
 
             // Send invitation email (don't await to speed up batch processing)

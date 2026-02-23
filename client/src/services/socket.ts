@@ -23,13 +23,13 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('Socket connected');
+      console.log('[Socket] ✅ Connected! socket.id=', this.socket?.id);
       // Notify listeners so they can rejoin rooms after reconnection
       this.emit('socket:connected', {});
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+      console.log('[Socket] ❌ Disconnected:', reason);
     });
 
     this.socket.on('error', (error: { message: string }) => {
@@ -38,13 +38,22 @@ class SocketService {
     });
 
     this.socket.on('authenticated', (data: { userId: string }) => {
-      console.log('Socket authenticated:', data.userId);
+      console.log('[Socket] 🔑 Authenticated as userId:', data.userId);
     });
 
     // Set up event forwarding
-    this.socket.on('bus:location', (data) => this.emit('bus:location', data));
-    this.socket.on('bus:tripStarted', (data) => this.emit('bus:tripStarted', data));
-    this.socket.on('bus:tripEnded', (data) => this.emit('bus:tripEnded', data));
+    this.socket.on('bus:location', (data) => {
+      console.log('[Socket] 📍 bus:location received:', data);
+      this.emit('bus:location', data);
+    });
+    this.socket.on('bus:tripStarted', (data) => {
+      console.log('[Socket] 🚌 bus:tripStarted:', data);
+      this.emit('bus:tripStarted', data);
+    });
+    this.socket.on('bus:tripEnded', (data) => {
+      console.log('[Socket] 🏁 bus:tripEnded:', data);
+      this.emit('bus:tripEnded', data);
+    });
     this.socket.on('notification:busApproaching', (data) => this.emit('notification:busApproaching', data));
   }
 
@@ -77,6 +86,7 @@ class SocketService {
 
   // Rider methods
   joinRoute(routeId: string): void {
+    console.log('[Socket] 🔗 Joining route room:', routeId, '| socket connected?', this.socket?.connected);
     this.socket?.emit('rider:joinRoute', { routeId });
   }
 
@@ -114,6 +124,10 @@ class SocketService {
   onTripEnded(callback: (data: { tripId: string; busId: string }) => void): () => void {
     this.on('bus:tripEnded', callback as SocketCallback);
     return () => this.off('bus:tripEnded', callback as SocketCallback);
+  }
+
+  isConnected(): boolean {
+    return this.socket?.connected ?? false
   }
 
   onConnected(callback: () => void): () => void {
