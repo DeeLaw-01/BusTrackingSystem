@@ -19,6 +19,7 @@ export interface ServerToClientEvents {
   'bus:location': (data: BusLocationPayload) => void;
   'bus:tripStarted': (data: TripStartedPayload) => void;
   'bus:tripEnded': (data: TripEndedPayload) => void;
+  'trip:ended': (data: TripEndedPayload) => void;
 
   // Notifications
   'notification:busApproaching': (data: BusApproachingPayload) => void;
