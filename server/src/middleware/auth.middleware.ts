@@ -17,12 +17,14 @@ export interface AuthenticatedRequest extends Request {
 
 // Authenticate using JWT
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
-  passport.authenticate('jwt', { session: false }, (err: Error | null, user: IUserDocument | false) => {
+  passport.authenticate('jwt', { session: false }, (err: Error | null, user: IUserDocument | false): void => {
     if (err) {
-      return res.status(500).json({ success: false, error: 'Authentication error' });
+      res.status(500).json({ success: false, error: 'Authentication error' });
+      return;
     }
     if (!user) {
-      return res.status(401).json({ success: false, error: 'Unauthorized' });
+      res.status(401).json({ success: false, error: 'Unauthorized' });
+      return;
     }
     req.user = user;
     next();
