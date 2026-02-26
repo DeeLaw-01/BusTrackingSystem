@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose'
 
-import { IStop } from '../../../shared/src/route.types'
+import { IStop } from '../types/route.types'
 
 export interface IStopDocument
   extends Omit<IStop, '_id' | 'routeId'>,

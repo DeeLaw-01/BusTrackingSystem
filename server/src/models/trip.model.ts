@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-import { ITrip } from '../../../shared/src/route.types';
+import { ITrip } from '../types/route.types';
 
 export interface ITripDocument extends Omit<ITrip, '_id' | 'busId' | 'driverId' | 'routeId'>, Document {
   busId: mongoose.Types.ObjectId;

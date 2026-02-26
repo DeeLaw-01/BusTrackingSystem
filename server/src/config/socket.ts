@@ -10,7 +10,7 @@ import { riderHandlers } from '../socket/handlers/rider.handler';
 import type { 
   ClientToServerEvents, 
   ServerToClientEvents 
-} from '../../../shared/src/socket.types';
+} from '../types/socket.types';
 
 let io: Server<ClientToServerEvents, ServerToClientEvents> | null = null;
 

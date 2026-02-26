@@ -6,7 +6,7 @@ import Trip from '../models/trip.model';
 import Bus from '../models/bus.model';
 import Route from '../models/route.model';
 import Invitation from '../models/invitation.model';
-import { UserRole } from '../../../shared/src/user.types';
+import { UserRole } from '../types/user.types';
 import { getAllActiveBusLocations } from '../config/redis';
 import { sendInvitationEmail } from '../services/email.service';
 

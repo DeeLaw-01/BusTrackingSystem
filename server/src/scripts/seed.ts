@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { connectDB, disconnectDB } from '../config/db'
 import User from '../models/user.model'
-import { UserRole } from '../../../shared/src/user.types'
+import { UserRole } from '../types/user.types'
 
 // Load environment variables
 dotenv.config()

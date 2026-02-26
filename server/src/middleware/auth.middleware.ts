@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 
 import { IUserDocument } from '../models/user.model';
-import { UserRole } from '../../../shared/src/user.types';
+import { UserRole } from '../types/user.types';
 
 // Extend Express Request to include user
 declare global {

@@ -14,7 +14,7 @@ import type {
   ServerToClientEvents,
   StartTripPayload,
   LocationPayload
-} from '../../../../shared/src/socket.types'
+} from '../../types/socket.types'
 
 interface AuthenticatedSocket
   extends Socket<ClientToServerEvents, ServerToClientEvents> {

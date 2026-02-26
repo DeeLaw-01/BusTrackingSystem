@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import User from '../models/user.model'
 import Otp from '../models/otp.model'
 import Invitation from '../models/invitation.model'
-import { UserRole, IAuthResponse } from '../../../shared/src/user.types'
+import { UserRole, IAuthResponse } from '../types/user.types'
 import { sendOtpEmail } from '../services/email.service'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

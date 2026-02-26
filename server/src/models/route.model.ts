@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-import { IRoute } from '../../../shared/src/route.types';
+import { IRoute } from '../types/route.types';
 
 export interface IRouteDocument extends Omit<IRoute, '_id' | 'stops'>, Document {
   stops: mongoose.Types.ObjectId[];

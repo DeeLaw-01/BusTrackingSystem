@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-import { ILocationUpdate } from '../../../shared/src/route.types';
+import { ILocationUpdate } from '../types/route.types';
 
 export interface ILocationUpdateDocument extends Omit<ILocationUpdate, '_id' | 'tripId' | 'busId'>, Document {
   tripId: mongoose.Types.ObjectId;

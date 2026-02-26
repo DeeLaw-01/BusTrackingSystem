@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-import { IReminder } from '../../../shared/src/route.types';
+import { IReminder } from '../types/route.types';
 
 export interface IReminderDocument extends Omit<IReminder, '_id' | 'userId' | 'stopId' | 'routeId'>, Document {
   userId: mongoose.Types.ObjectId;

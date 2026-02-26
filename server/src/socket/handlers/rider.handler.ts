@@ -7,7 +7,7 @@ import type {
   ServerToClientEvents,
   JoinRoutePayload,
   LeaveRoutePayload,
-} from '../../../../shared/src/socket.types';
+} from '../../types/socket.types';
 
 interface AuthenticatedSocket extends Socket<ClientToServerEvents, ServerToClientEvents> {
   userId?: string;

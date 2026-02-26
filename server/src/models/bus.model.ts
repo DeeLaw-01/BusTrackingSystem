@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-import { IBus } from '../../../shared/src/route.types';
+import { IBus } from '../types/route.types';
 
 export interface IBusDocument extends Omit<IBus, '_id' | 'routeId' | 'driverId'>, Document {
   routeId?: mongoose.Types.ObjectId;
