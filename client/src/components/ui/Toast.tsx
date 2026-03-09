@@ -15,8 +15,12 @@ interface ToastItem {
   variant: ToastVariant;
 }
 
+type ToastInput =
+  | string
+  | { type: ToastVariant | "error" | "success" | "info"; message: string };
+
 interface ToastContextValue {
-  toast: (message: string, variant?: ToastVariant) => void;
+  toast: (input: ToastInput, variant?: ToastVariant) => void;
 }
 
 const ToastContext = createContext<ToastContextValue>({ toast: () => {} });
@@ -30,9 +34,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const toast = useCallback(
-    (message: string, variant: ToastVariant = "info") => {
+    (input: ToastInput, variant: ToastVariant = "info") => {
+      const message = typeof input === "string" ? input : input.message;
+      const v: ToastVariant =
+        typeof input === "string" ? variant : (input.type as ToastVariant);
       const id = Math.random().toString(36).slice(2);
-      setToasts((prev) => [...prev, { id, message, variant }]);
+      setToasts((prev) => [...prev, { id, message, variant: v }]);
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, 4000);

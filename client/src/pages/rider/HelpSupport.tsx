@@ -1,151 +1,315 @@
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   HelpCircle,
-  MessageCircle,
+  ChevronDown,
   Mail,
-  FileText,
-  ChevronRight,
+  MessageSquare,
 } from "lucide-react";
+
+const C = {
+  indigo: "#6366f1",
+  indigoBg: "#eef2ff",
+  sky: "#0ea5e9",
+  dark: "#0f172a",
+  slate: "#475569",
+  light: "#94a3b8",
+} as const;
+
+const FAQS = [
+  {
+    q: "How do I track a bus?",
+    a: "Select a bus from the main dashboard, then tap Track This Bus to see the route and follow the bus in real-time on the map.",
+  },
+  {
+    q: "How accurate is the bus location?",
+    a: "Bus locations update in real-time via GPS with 10-20 metre accuracy, sourced directly from the drivers device.",
+  },
+  {
+    q: "Can I set stop reminders?",
+    a: "Yes! In tracking view, tap the bell icon next to any stop to get a push notification when the bus is 2-15 minutes away.",
+  },
+  {
+    q: "What if I miss my bus?",
+    a: "Head back to the main screen — other buses on the same route may still be running. Check the fleet list for live alternatives.",
+  },
+  {
+    q: "How do I update my profile?",
+    a: "Open the side menu and go to Settings. You can update your name, phone number, and profile picture from there.",
+  },
+];
 
 export default function HelpSupport() {
   const navigate = useNavigate();
-
-  const faqs = [
-    {
-      question: "How do I track a bus?",
-      answer:
-        'Select a bus from the main dashboard, then tap "View Stops" to see the route and track the bus in real-time.',
-    },
-    {
-      question: "How accurate is the bus location?",
-      answer:
-        "Bus locations are updated in real-time using GPS. The location is typically accurate within 10-20 meters.",
-    },
-    {
-      question: "Can I set reminders for bus arrivals?",
-      answer:
-        "Yes! You can set reminders to get notified when your bus is approaching your stop.",
-    },
-    {
-      question: "What if I miss my bus?",
-      answer:
-        "You can track the next bus on the same route. Check the dashboard for other available buses.",
-    },
-    {
-      question: "How do I change my profile information?",
-      answer:
-        "Go to Settings from the menu, then edit your name, phone number, or profile picture.",
-    },
-  ];
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="h-14 bg-white border-b border-slate-200 flex items-center gap-3 px-4 sticky top-0 z-10">
+    <div style={{ minHeight: "100vh", background: "#f5f7fa" }}>
+      <style>{`
+        @media (min-width: 768px) {
+          .hlp-hero-inner { max-width: 680px; margin: 0 auto; }
+          .hlp-content { display: flex; justify-content: center; }
+          .hlp-content-inner { width: 100%; max-width: 640px; }
+        }
+      `}</style>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          height: 56,
+          background: "#fff",
+          borderBottom: "1px solid #e8edf2",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "0 16px",
+        }}
+      >
         <button
-          title="Back"
           onClick={() => navigate(-1)}
-          className="btn btn-icon"
+          style={{
+            width: 34,
+            height: 34,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 10,
+            border: "1px solid #e2e8f0",
+            background: "#f8fafc",
+            cursor: "pointer",
+            color: C.slate,
+          }}
         >
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+          <ArrowLeft size={16} />
         </button>
-        <h1 className="text-base font-semibold text-slate-900">
-          Help &amp; Support
-        </h1>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.dark }}>
+          Help and Support
+        </span>
       </header>
 
-      <div className="p-4 space-y-4">
-        {/* Contact Options */}
-        <div className="card">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-            Get in Touch
-          </h2>
-
-          <div className="space-y-2">
-            <a
-              href="mailto:support@bustrack.com"
-              className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-gray-300 hover:bg-gray-100 transition-all"
-            >
-              <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                <Mail className="w-5 h-5 text-gray-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900">
-                  Email Support
-                </p>
-                <p className="text-xs text-slate-500">support@bustrack.com</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
-            </a>
-
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-gray-200 hover:bg-gray-100 transition-all text-left">
-              <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                <MessageCircle className="w-5 h-5 text-gray-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900">
-                  Live Chat
-                </p>
-                <p className="text-xs text-slate-500">Available 24/7</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
-            </button>
+      <div
+        style={{
+          background:
+            "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f2a4a 100%)",
+          padding: "24px 20px 36px",
+        }}
+      >
+        <div className="hlp-hero-inner">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 13,
+              background: "rgba(99,102,241,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 12,
+            }}
+          >
+            <HelpCircle size={22} color="#818cf8" />
+          </div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 800,
+              color: "#f1f5f9",
+              letterSpacing: "-0.03em",
+              marginBottom: 6,
+            }}
+          >
+            How can we help?
+          </div>
+          <div style={{ fontSize: 13, color: "#64748b" }}>
+            Find answers to common questions below.
           </div>
         </div>
+      </div>
 
-        {/* FAQ Section */}
-        <div className="card">
-          <div className="flex items-center gap-2 mb-3">
-            <HelpCircle className="w-5 h-5 text-gray-700" />
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              Frequently Asked Questions
-            </h2>
-          </div>
-
-          <div className="space-y-2">
-            {faqs.map((faq, index) => (
-              <details
-                key={index}
-                className="group rounded-xl border border-slate-200 overflow-hidden"
+      <div
+        className="hlp-content"
+        style={{ padding: "0 16px", marginTop: -14 }}
+      >
+        <div className="hlp-content-inner">
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 18,
+              overflow: "hidden",
+              marginBottom: 14,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+              border: "1px solid #e8edf2",
+            }}
+          >
+            <div style={{ padding: "16px 18px 4px" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: C.light,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  marginBottom: 12,
+                }}
               >
-                <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none select-none hover:bg-slate-50 transition-colors">
-                  <p className="text-sm font-semibold text-slate-800 pr-4">
-                    {faq.question}
-                  </p>
-                  <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 transition-transform group-open:rotate-90" />
-                </summary>
-                <p className="px-4 pb-4 pt-1 text-sm text-slate-500 leading-relaxed border-t border-slate-100">
-                  {faq.answer}
-                </p>
-              </details>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="card">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-            Quick Links
-          </h2>
-
-          <div className="space-y-2">
-            <button
-              onClick={() => navigate("/privacy")}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-gray-300 hover:bg-gray-100 transition-all text-left"
-            >
-              <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5 text-slate-500" />
+                Frequently Asked Questions
               </div>
-              <span className="flex-1 text-sm font-semibold text-slate-900">
-                Privacy Policy
-              </span>
-              <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
-            </button>
+            </div>
+            {FAQS.map((faq, i) => {
+              const open = openIdx === i;
+              return (
+                <div key={i} style={{ borderTop: "1px solid #f8fafc" }}>
+                  <button
+                    onClick={() => setOpenIdx(open ? null : i)}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "14px 18px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: open ? C.indigo : C.dark,
+                        flex: 1,
+                        paddingRight: 12,
+                      }}
+                    >
+                      {faq.q}
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      color={open ? C.indigo : C.light}
+                      style={{
+                        flexShrink: 0,
+                        transform: open ? "rotate(180deg)" : "none",
+                        transition: "transform .2s",
+                      }}
+                    />
+                  </button>
+                  {open && (
+                    <div
+                      style={{
+                        padding: "0 18px 16px 18px",
+                        paddingTop: 12,
+                        fontSize: 13.5,
+                        color: C.slate,
+                        lineHeight: 1.65,
+                        borderTop: "1px solid #eef2ff",
+                      }}
+                    >
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 18,
+              padding: 18,
+              marginBottom: 24,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+              border: "1px solid #e8edf2",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: C.light,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginBottom: 14,
+              }}
+            >
+              Still need help?
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <a
+                href="mailto:support@safara.app"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "14px 16px",
+                  background: "#eef2ff",
+                  border: "1px solid #c7d2fe",
+                  borderRadius: 12,
+                  textDecoration: "none",
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    background: "#c7d2fe",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Mail size={16} color={C.indigo} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: C.dark }}>
+                    Email Support
+                  </div>
+                  <div style={{ fontSize: 12, color: C.light }}>
+                    support@safara.app
+                  </div>
+                </div>
+              </a>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "14px 16px",
+                  background: "#f0f9ff",
+                  border: "1px solid #bae6fd",
+                  borderRadius: 12,
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    background: "#bae6fd",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <MessageSquare size={16} color={C.sky} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: C.dark }}>
+                    Live Chat
+                  </div>
+                  <div style={{ fontSize: 12, color: C.light }}>
+                    Available Mon to Fri, 9am to 6pm
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

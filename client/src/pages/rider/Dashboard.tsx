@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MapContainer,
@@ -15,7 +15,6 @@ import {
   ArrowLeft,
   Loader2,
   Phone,
-  Info,
   Menu,
   X,
   Settings,
@@ -25,15 +24,401 @@ import {
   Bell as BellIcon,
   Shield,
   ChevronRight,
+  MapPin,
+  Navigation,
+  Zap,
+  Radio,
 } from "lucide-react";
 import { routesApi, busesApi, remindersApi } from "@/services/api";
 import { socketService } from "@/services/socket";
 import { useBusStore } from "@/store/busStore";
 import { useAuthStore } from "@/store/authStore";
 import UserAvatar from "@/components/ui/UserAvatar";
-import type { Route, Stop, BusLocation } from "@/types";
+import type { Route, Stop, BusLocation, Reminder } from "@/types";
 
-// ─── Leaflet Icon Fix ────────────────────────────────────────────────────────
+const CSS = `
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .db-root { position: fixed; inset: 0; background: #f5f7fa; overflow: hidden; font-family: inherit; }
+  .db-map-bg { position: absolute; inset: 0; z-index: 0; }
+
+  /* ── Top bar ── */
+  .db-topbar {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+    height: 60px; background: #fff;
+    border-bottom: 1px solid #e8edf2;
+    display: flex; align-items: center; padding: 0 16px; gap: 12px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  }
+  .db-topbar-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+  .db-topbar-logo-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 14px rgba(99,102,241,0.3); flex-shrink: 0;
+  }
+  .db-topbar-logo-text { font-size: 17px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
+  .db-topbar-spacer { flex: 1; }
+  .db-topbar-icon-btn {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e2e8f0;
+    background: #f8fafc; color: #475569;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background 0.15s, color 0.15s; flex-shrink: 0;
+  }
+  .db-topbar-icon-btn:hover { background: #eef2ff; color: #6366f1; }
+  .db-topbar-back-btn {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e2e8f0;
+    background: #f8fafc; color: #475569;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background 0.15s; flex-shrink: 0;
+  }
+  .db-topbar-back-btn:hover { background: #f1f5f9; }
+  .db-topbar-subtitle { font-size: 11.5px; color: #94a3b8; margin-left: 8px; }
+  .db-desk-nav { display: none; align-items: center; gap: 4px; }
+  .db-desk-nav-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 10px; border: 1px solid #e2e8f0;
+    background: #f8fafc; color: #475569; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .db-desk-nav-btn:hover { background: #eef2ff; border-color: #c7d2fe; color: #6366f1; }
+  .db-desk-user-chip {
+    display: none; align-items: center; gap: 8px;
+    padding: 5px 12px 5px 6px; border-radius: 99px;
+    border: 1px solid #e2e8f0; background: #f8fafc;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .db-desk-user-chip:hover { background: #eef2ff; border-color: #c7d2fe; }
+  .db-desk-user-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+
+  /* ── Mobile: floating bottom sheet ── */
+  .db-sheet-wrap {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 90;
+    display: flex; flex-direction: column; pointer-events: none;
+  }
+  .db-sheet {
+    pointer-events: auto;
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    border-top: 1px solid #e8edf2;
+    display: flex; flex-direction: column;
+    box-shadow: 0 -8px 32px rgba(99,102,241,0.1);
+    transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1);
+    overflow: hidden;
+  }
+  .db-sheet-handle-row {
+    display: flex; justify-content: center; padding: 10px 0 6px; cursor: pointer; flex-shrink: 0;
+  }
+  .db-sheet-handle { width: 38px; height: 4px; border-radius: 99px; background: #e2e8f0; }
+  .db-sheet-body { flex: 1; overflow-y: auto; padding: 0 16px 28px; min-height: 0; }
+
+  /* ── Desktop: floating left panel ── */
+  .db-panel-wrap { display: none; }
+
+  @media (min-width: 768px) {
+    .db-topbar { height: 64px; padding: 0 28px; }
+    .db-topbar-logo-text { font-size: 18px; }
+    .db-topbar-icon-btn { display: none; }
+    .db-desk-nav { display: flex; }
+    .db-desk-user-chip { display: flex; }
+    /* Hide mobile sheet */
+    .db-sheet-wrap { display: none; }
+    /* Show desktop panel */
+    .db-panel-wrap {
+      display: flex; flex-direction: column;
+      position: absolute; top: 80px; left: 20px; bottom: 20px; z-index: 90;
+      width: 380px;
+    }
+    .db-panel {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid #e8edf2;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+    }
+    .db-panel-head {
+      flex-shrink: 0; padding: 20px 20px 14px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .db-panel-body { flex: 1; overflow-y: auto; padding: 0 16px 24px; min-height: 0; }
+  }
+  @media (min-width: 1200px) {
+    .db-panel-wrap { width: 430px; left: 28px; }
+    .db-topbar { padding: 0 36px; }
+  }
+
+  /* ── Panel head ── */
+  .db-panel-head-row { display: flex; align-items: center; gap: 10px; }
+  .db-panel-head-icon {
+    width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+    background: #eef2ff; border: 1px solid #c7d2fe;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .db-panel-head-title { font-size: 15px; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; }
+  .db-panel-head-sub { font-size: 11.5px; color: #94a3b8; margin-top: 1px; }
+  .db-live-badge {
+    margin-left: auto; display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 99px;
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    font-size: 11px; font-weight: 700; color: #16a34a;
+  }
+  .db-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+
+  /* ── Bus select list ── */
+  .db-bus-list { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+  .db-bus-card {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 13px 14px; border-radius: 14px; cursor: pointer; text-align: left;
+    border: 1.5px solid #e8edf2;
+    background: #fff;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    position: relative; overflow: hidden;
+  }
+  .db-bus-card:hover { background: #eef2ff; border-color: #c7d2fe; transform: translateY(-1px); }
+  .db-bus-card-live { border-left: 3px solid #6366f1; }
+  .db-bus-card-inactive { opacity: 0.6; border-color: #f1f5f9; background: #fafafa; }
+  .db-bus-card-icon {
+    width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0;
+    background: #eef2ff; border: 1px solid #c7d2fe;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .db-bus-card-icon-inactive { background: #f1f5f9; border-color: #e2e8f0; }
+  .db-bus-name { font-size: 14px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
+  .db-bus-name-inactive { color: #94a3b8; }
+  .db-bus-status-row { display: flex; align-items: center; gap: 5px; }
+  .db-bus-pulse { position: relative; width: 8px; height: 8px; flex-shrink: 0; }
+  .db-bus-pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; position: absolute; }
+  .db-bus-pulse-ring { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #22c55e; position: absolute; animation: pulse-ring 1.5s ease-out infinite; }
+  .db-bus-live-label { font-size: 12px; font-weight: 600; color: #16a34a; }
+  .db-bus-route-badge {
+    margin-left: auto; padding: 3px 10px; border-radius: 99px; flex-shrink: 0;
+    font-size: 11.5px; font-weight: 600; color: #0ea5e9;
+    background: #f0f9ff; border: 1px solid #bae6fd;
+  }
+  .db-bus-route-badge-inactive { color: #94a3b8; background: #f8fafc; border-color: #e2e8f0; }
+  .db-section-label {
+    font-size: 10.5px; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.09em; margin: 14px 0 8px;
+  }
+
+  /* ── Empty state ── */
+  .db-empty {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 0; text-align: center; animation: fade-in 0.3s ease;
+  }
+  .db-empty-icon {
+    width: 56px; height: 56px; border-radius: 18px; margin-bottom: 14px;
+    background: #eef2ff; border: 1px solid #c7d2fe;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .db-empty-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+  .db-empty-sub { font-size: 13px; color: #94a3b8; }
+
+  /* ── Route preview ── */
+  .db-preview-head {
+    border-radius: 16px; padding: 14px 16px; margin-bottom: 16px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f2a4a 100%);
+    border: 1px solid rgba(99,102,241,0.2);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .db-preview-bus-icon {
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.3);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .db-preview-bus-name { font-size: 15px; font-weight: 800; color: #f1f5f9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .db-preview-route-name { font-size: 12px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+  .db-stops-badge {
+    margin-left: auto; padding: 3px 10px; border-radius: 99px; flex-shrink: 0;
+    font-size: 11.5px; font-weight: 700; color: #38bdf8;
+    background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.25);
+  }
+  .db-timeline { position: relative; margin-left: 20px; padding-bottom: 8px; }
+  .db-timeline-line { position: absolute; left: 6px; top: 10px; bottom: 10px; width: 2px; background: #e2e8f0; border-radius: 2px; }
+  .db-timeline-row { position: relative; padding-left: 26px; display: flex; align-items: flex-start; gap: 8px; }
+  .db-timeline-dot-wrap { position: absolute; left: -1px; }
+  .db-timeline-dot { border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .db-timeline-name-first { font-size: 13.5px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .db-timeline-name { font-size: 13px; font-weight: 500; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .db-timeline-name-last { font-size: 13.5px; font-weight: 700; color: #ef4444; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .db-timeline-tag { padding: 2px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 700; flex-shrink: 0; }
+  .db-track-btn {
+    width: 100%; margin-top: 18px; padding: 14px 0; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; letter-spacing: 0.01em;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.35); transition: opacity 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .db-track-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+
+  /* ── Active tracking ── */
+  .db-driver-card {
+    display: flex; align-items: center; justify-content: space-between;
+    border-left: 3px solid #0ea5e9;
+    background: #f0f9ff; border-radius: 0 14px 14px 0;
+    padding: 12px 12px 12px 16px; margin-bottom: 14px;
+    border-top: 1px solid #bae6fd; border-right: 1px solid #bae6fd; border-bottom: 1px solid #bae6fd;
+  }
+  .db-driver-label { font-size: 10.5px; font-weight: 700; color: #0ea5e9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .db-driver-name { font-size: 14px; font-weight: 700; color: #0f172a; }
+  .db-call-btn {
+    display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
+    color: #0ea5e9; text-decoration: none; background: #fff;
+    padding: 7px 12px; border-radius: 10px; border: 1px solid #bae6fd;
+    transition: background 0.15s;
+  }
+  .db-call-btn:hover { background: #e0f2fe; }
+  .db-eta-card {
+    border-radius: 18px; padding: 18px 20px; margin-bottom: 16px;
+    background: #eef2ff; border: 1px solid #c7d2fe;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .db-eta-label { font-size: 10.5px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+  .db-eta-time { font-size: 36px; font-weight: 900; color: #4f46e5; letter-spacing: -0.04em; line-height: 1; }
+  .db-eta-hint { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .db-speed-chip {
+    margin-left: auto; text-align: center;
+    background: #fff; border-radius: 14px; padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+  }
+  .db-speed-val { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
+  .db-speed-unit { font-size: 10.5px; font-weight: 600; color: #94a3b8; }
+  .db-stops-label { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 10px; }
+
+  /* ── Stop track list ── */
+  .db-stop-row { display: flex; gap: 12px; }
+  .db-stop-spine { display: flex; flex-direction: column; align-items: center; width: 20px; }
+  .db-stop-dot-current {
+    width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; z-index: 1;
+    background: #6366f1; border: 3px solid #c7d2fe;
+    box-shadow: 0 0 0 3px #eef2ff;
+  }
+  .db-stop-dot-passed {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; z-index: 1;
+    background: #22c55e; border: 2px solid #86efac;
+  }
+  .db-stop-dot-future {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; z-index: 1;
+    background: transparent; border: 2px solid #e2e8f0;
+  }
+  .db-stop-line-passed { flex: 1; width: 2px; min-height: 22px; background: #22c55e; }
+  .db-stop-line-future { flex: 1; width: 2px; min-height: 22px; background: #e2e8f0; }
+  .db-stop-content { flex: 1; padding-bottom: 18px; }
+  .db-stop-name-current { font-size: 14px; font-weight: 700; color: #6366f1; }
+  .db-stop-name-passed { font-size: 13px; font-weight: 500; color: #94a3b8; }
+  .db-stop-name-future { font-size: 13px; font-weight: 500; color: #0f172a; }
+  .db-stop-here-tag { font-size: 11px; font-weight: 600; color: #6366f1; margin-top: 1px; }
+  .db-stop-reminder-tag { font-size: 11px; color: #0ea5e9; margin-top: 2px; }
+  .db-stop-eta-tag { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+  .db-bell-btn {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .db-bell-btn-active { background: #f0f9ff; border: 1.5px solid #bae6fd; color: #0ea5e9; }
+  .db-bell-btn-idle { background: #f8fafc; border: 1.5px solid #e2e8f0; color: #94a3b8; }
+  .db-reminder-popup {
+    position: absolute; right: 0; top: 36px; width: 220px; z-index: 1000;
+    background: #fff; border-radius: 16px; border: 1px solid #e8edf2;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 14px;
+    animation: fade-in 0.15s ease;
+  }
+  .db-reminder-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+  .db-reminder-sub { font-size: 12px; color: #94a3b8; margin-bottom: 12px; }
+  .db-reminder-opts { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+  .db-reminder-opt-btn {
+    padding: 7px 0; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .db-reminder-opt-active { background: #6366f1; border: 1.5px solid #6366f1; color: #fff; }
+  .db-reminder-opt-idle { background: #f8fafc; border: 1.5px solid #e2e8f0; color: #475569; }
+  .db-reminder-save-btn {
+    flex: 1; padding: 9px 0; border-radius: 10px; border: none;
+    background: #6366f1; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .db-reminder-remove-btn {
+    flex: 1; padding: 9px 0; border-radius: 10px;
+    background: #fff5f5; border: 1px solid #fecaca;
+    color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+
+  /* ── Sidebar drawer ── */
+  .db-sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+    transition: opacity 0.3s;
+  }
+  .db-sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 285px; z-index: 201;
+    background: #fff; border-right: 1px solid #e8edf2;
+    box-shadow: 8px 0 40px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column;
+    transition: transform 0.3s ease-out;
+  }
+  .db-sidebar-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f2a4a 100%);
+    padding: 52px 20px 24px; position: relative; flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .db-sidebar-close {
+    position: absolute; top: 14px; right: 14px; width: 32px; height: 32px;
+    border-radius: 50%; background: rgba(255,255,255,0.08); border: none;
+    cursor: pointer; color: #94a3b8; display: flex; align-items: center; justify-content: center;
+  }
+  .db-sidebar-name { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-top: 12px; margin-bottom: 2px; }
+  .db-sidebar-email { font-size: 12.5px; color: #475569; margin-bottom: 10px; }
+  .db-sidebar-role {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 99px; background: rgba(99,102,241,0.18); color: #a5b4fc;
+    text-transform: capitalize;
+  }
+  .db-sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .db-sidebar-item {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 13px 20px; background: none; border: none; cursor: pointer;
+    text-align: left; transition: background 0.12s;
+  }
+  .db-sidebar-item:hover { background: #f8fafc; }
+  .db-sidebar-item-label { flex: 1; font-size: 14px; font-weight: 500; color: #0f172a; }
+  .db-sidebar-footer { border-top: 1px solid #f1f5f9; padding: 14px; flex-shrink: 0; }
+  .db-sidebar-logout {
+    width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border-radius: 12px; border: none;
+    background: #fff5f5; border: 1px solid #fecaca;
+    color: #ef4444; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .db-sidebar-logout:hover { background: #fee2e2; }
+  .db-sidebar-version { padding: 8px 20px 14px; font-size: 11.5px; color: #cbd5e1; }
+
+  /* ── Loading screen ── */
+  .db-loading {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    background: #f5f7fa;
+  }
+  .db-loading-icon {
+    width: 60px; height: 60px; border-radius: 18px;
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 40px rgba(99,102,241,0.5);
+    animation: fade-in 0.3s ease;
+  }
+  .db-loading-text { font-size: 14px; font-weight: 600; color: #94a3b8; }
+  .animate-spin { animation: spin 1s linear infinite; }
+`;
+
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => void })
   ._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -45,74 +430,28 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// ─── Custom Icons ────────────────────────────────────────────────────────────
 function createBusIcon(label: string, isActive = false) {
   return L.divIcon({
     className: "",
-    html: `
-      <div style="position:relative;width:48px;height:56px;">
-        <div style="
-          width:48px;height:48px;
-          background:${isActive ? "#f95f5f" : "#fbbf24"};
-          border-radius:12px;
-          display:flex;align-items:center;justify-content:center;
-          box-shadow:0 4px 12px rgba(0,0,0,0.2);
-          border:3px solid white;
-        ">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-            <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/>
-          </svg>
-        </div>
-        <div style="
-          position:absolute;top:-8px;right:-8px;
-          width:24px;height:24px;
-          background:#38bdf8;border:2px solid white;
-          border-radius:50%;display:flex;align-items:center;justify-content:center;
-          font-size:11px;font-weight:700;color:white;
-          box-shadow:0 2px 6px rgba(0,0,0,0.2);
-        ">${label}</div>
-      </div>
-    `,
+    html: `<div style="position:relative;width:48px;height:56px;"><div style="width:48px;height:48px;background:${isActive ? "#f95f5f" : "#fbbf24"};border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);border:3px solid white;"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg></div><div style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:#38bdf8;border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.2);">${label}</div></div>`,
     iconSize: [48, 56],
     iconAnchor: [24, 48],
   });
 }
-
 const stopIcon = L.divIcon({
   className: "",
-  html: `
-    <div style="
-      width:14px;height:14px;
-      background:#f95f5f;
-      border-radius:50%;
-      border:3px solid white;
-      box-shadow:0 2px 6px rgba(0,0,0,0.3);
-    "></div>
-  `,
+  html: `<div style="width:14px;height:14px;background:#6366f1;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(99,102,241,0.4);"></div>`,
   iconSize: [14, 14],
   iconAnchor: [7, 7],
 });
-
 const userIcon = L.divIcon({
   className: "",
-  html: `
-    <div style="position:relative;width:20px;height:20px;">
-      <div style="
-        width:20px;height:20px;
-        background:#3b82f6;
-        border-radius:50%;
-        border:3px solid white;
-        box-shadow:0 2px 8px rgba(59,130,246,0.5);
-      "></div>
-    </div>
-  `,
+  html: `<div style="width:20px;height:20px;background:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.5);"></div>`,
   iconSize: [20, 20],
   iconAnchor: [10, 10],
 });
 
-// ─── Types ───────────────────────────────────────────────────────────────────
 type ViewState = "select" | "preview" | "tracking";
-
 interface BusWithRoute {
   _id: string;
   plateNumber: string;
@@ -125,7 +464,6 @@ interface BusWithRoute {
     | string;
 }
 
-// ─── Map Controller ──────────────────────────────────────────────────────────
 function MapController({
   center,
   zoom,
@@ -136,46 +474,30 @@ function MapController({
   bounds?: L.LatLngBoundsExpression;
 }) {
   const map = useMap();
-
   useEffect(() => {
-    if (bounds) {
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-    } else if (center && zoom) {
-      map.setView(center, zoom);
-    }
+    if (bounds) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    else if (center && zoom) map.setView(center, zoom);
   }, [map, center, zoom, bounds]);
-
   return null;
 }
 
-// ─── Main Dashboard Component ────────────────────────────────────────────────
 export default function RiderDashboard() {
   const { busLocations, updateBusLocation, removeBus } = useBusStore();
   const { user, logout } = useAuthStore();
-
-  // View state
+  const navigate = useNavigate();
   const [view, setView] = useState<ViewState>("select");
   const [sheetExpanded, setSheetExpanded] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Data state
   const [routes, setRoutes] = useState<Route[]>([]);
   const [buses, setBuses] = useState<BusWithRoute[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Selected items
   const [selectedBus, setSelectedBus] = useState<BusWithRoute | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
-
-  // User location
   const [userLocation, setUserLocation] = useState<[number, number] | null>(
     null,
   );
-
-  // Default center (Lahore)
   const defaultCenter: [number, number] = [31.5204, 74.3587];
 
-  // ─── Load initial data ──────────────────────────────────────────────
   useEffect(() => {
     loadData();
     getUserLocation();
@@ -199,75 +521,53 @@ export default function RiderDashboard() {
   const getUserLocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
-      },
+      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
       (err) => console.log("Geolocation not available:", err.message),
       { enableHighAccuracy: true, timeout: 10000 },
     );
   };
 
-  // ─── Socket connection for real-time bus updates ────────────────────
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      socketService.connect(token);
-    }
-
-    const unsubLocation = socketService.onBusLocation((data) => {
-      updateBusLocation(data);
-    });
-
-    const unsubTripEnded = socketService.onTripEnded((data) => {
-      removeBus(data.busId);
-    });
-
+    if (token) socketService.connect(token);
+    const unsubLocation = socketService.onBusLocation((data) =>
+      updateBusLocation(data),
+    );
+    const unsubTripEnded = socketService.onTripEnded((data) =>
+      removeBus(data.busId),
+    );
     return () => {
       unsubLocation();
       unsubTripEnded();
     };
   }, [updateBusLocation, removeBus]);
 
-  // ─── Join all route rooms for live bus updates ──────────────────────
   useEffect(() => {
-    const joinAllRoutes = () => {
-      routes.forEach((r) => socketService.joinRoute(r._id));
-    };
-
-    joinAllRoutes();
-
-    // Re-join rooms after socket reconnection (rooms are lost on disconnect)
+    const joinAll = () => routes.forEach((r) => socketService.joinRoute(r._id));
+    joinAll();
     const unsubConnected = socketService.onConnected(() => {
-      console.log("Socket reconnected — rejoining route rooms");
-      joinAllRoutes();
+      joinAll();
     });
-
     return () => {
       routes.forEach((r) => socketService.leaveRoute(r._id));
       unsubConnected();
     };
   }, [routes]);
 
-  // ─── Handlers ───────────────────────────────────────────────────────
   const handleSelectBus = (bus: BusWithRoute) => {
     setSelectedBus(bus);
-    // Find the route for this bus
     const routeId =
       typeof bus.routeId === "object" ? bus.routeId._id : bus.routeId;
     const route = routes.find((r) => r._id === routeId);
-    if (route) {
-      setSelectedRoute(route);
-    }
+    if (route) setSelectedRoute(route);
     setView("preview");
     setSheetExpanded(true);
   };
-
   const handleViewStops = () => {
     if (!selectedBus || !selectedRoute) return;
     setView("tracking");
     setSheetExpanded(true);
   };
-
   const handleBack = () => {
     if (view === "tracking") {
       setView("preview");
@@ -277,13 +577,8 @@ export default function RiderDashboard() {
       setSelectedRoute(null);
     }
   };
-
-  // ─── Get live bus locations ─────────────────────────────────────────
-  const getLiveBusLocation = (busId: string): BusLocation | undefined => {
-    return busLocations.get(busId);
-  };
-
-  // ─── Compute map bounds ─────────────────────────────────────────────
+  const getLiveBusLocation = (busId: string): BusLocation | undefined =>
+    busLocations.get(busId);
   const getMapBounds = (): L.LatLngBoundsExpression | undefined => {
     if (view === "preview" || view === "tracking") {
       if (selectedRoute && selectedRoute.stops?.length > 0) {
@@ -299,43 +594,35 @@ export default function RiderDashboard() {
         return points as L.LatLngBoundsExpression;
       }
     }
-    // For select view, show all bus locations + user
     const points: [number, number][] = [];
     busLocations.forEach((loc) => points.push([loc.latitude, loc.longitude]));
     if (userLocation) points.push(userLocation);
     if (points.length >= 2) return points as L.LatLngBoundsExpression;
     return undefined;
   };
-
-  // ─── Get route label for a bus ──────────────────────────────────────
   const getRouteName = (bus: BusWithRoute): string => {
-    if (typeof bus.routeId === "object" && bus.routeId) {
-      return bus.routeId.name;
-    }
-    const route = routes.find((r) => r._id === bus.routeId);
-    return route?.name || "";
+    if (typeof bus.routeId === "object" && bus.routeId) return bus.routeId.name;
+    return routes.find((r) => r._id === bus.routeId)?.name || "";
   };
-
-  // ─── Get bus letter label ──────────────────────────────────────────
-  const getBusLabel = (index: number): string => {
-    return String.fromCharCode(65 + (index % 26));
-  };
-
-  // ─── Get driver info ───────────────────────────────────────────────
+  const getBusLabel = (index: number): string =>
+    String.fromCharCode(65 + (index % 26));
   const getDriverInfo = (
     bus: BusWithRoute,
   ): { name: string; phone?: string } | null => {
-    if (typeof bus.driverId === "object" && bus.driverId) {
+    if (typeof bus.driverId === "object" && bus.driverId)
       return { name: bus.driverId.name, phone: bus.driverId.phone };
-    }
     return null;
   };
 
-  // ─── Loading state ─────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-700" />
+      <div className="db-loading">
+        <style>{CSS}</style>
+        <div className="db-loading-icon">
+          <Bus size={28} color="#fff" />
+        </div>
+        <Loader2 size={20} color="#6366f1" className="animate-spin" />
+        <span className="db-loading-text">Loading transit data…</span>
       </div>
     );
   }
@@ -343,269 +630,286 @@ export default function RiderDashboard() {
   const mapBounds = getMapBounds();
   const mapCenter = userLocation || defaultCenter;
 
-  return (
-    <div
-      className={`h-screen flex flex-col bg-white relative overflow-hidden ${
-        sidebarOpen ? "sidebar-open" : ""
-      }`}
+  const mapContent = (
+    <MapContainer
+      center={mapCenter}
+      zoom={13}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      zoomControl={false}
     >
-      {/* ─── Sidebar Drawer ───────────────────────────────────────── */}
-      <SidebarDrawer
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        user={user}
-        onLogout={logout}
+      <TileLayer
+        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
-
-      {/* ─── Header ─────────────────────────────────────────────────── */}
-      <header
-        className="shrink-0 relative z-1001 flex items-center gap-2 px-4"
-        style={{
-          height: "56px",
-          background: "#ffffff",
-          borderBottom: "1.5px solid #e2e8f0",
-          boxShadow: "none",
-        }}
-      >
-        {view !== "select" ? (
-          <button
-            title="Back"
-            onClick={handleBack}
-            className="flex items-center justify-center rounded-xl transition-all"
-            style={{
-              width: "32px",
-              height: "32px",
-              background: "#f1f5f9",
-              border: "1px solid #e2e8f0",
+      {mapBounds && <MapController bounds={mapBounds} />}
+      {!mapBounds && <MapController center={mapCenter} zoom={13} />}
+      {userLocation && (
+        <>
+          <Circle
+            center={userLocation}
+            radius={100}
+            pathOptions={{
+              color: "#3b82f6",
+              fillColor: "#3b82f6",
+              fillOpacity: 0.1,
+              weight: 1,
             }}
-          >
-            <ArrowLeft className="w-4 h-4" style={{ color: "#64748b" }} />
-          </button>
-        ) : (
-          <button
-            title="Open Sidebar"
-            onClick={() => setSidebarOpen(true)}
-            className="flex items-center justify-center rounded-xl transition-all"
-            style={{
-              width: "32px",
-              height: "32px",
-              background: "#f1f5f9",
-              border: "1px solid #e2e8f0",
-            }}
-          >
-            <Menu className="w-4 h-4" style={{ color: "#64748b" }} />
-          </button>
-        )}
-        <div className="flex items-center gap-2 flex-1 justify-center">
-          <div
-            className="flex items-center justify-center rounded-xl"
-            style={{
-              width: "28px",
-              height: "28px",
-              background: "#111827",
-            }}
-          >
-            <Bus className="w-3.5 h-3.5 text-white" />
-          </div>
-          <h1
-            className="text-sm font-bold tracking-wide"
-            style={{ color: "#0f172a" }}
-          >
-            Safara Transit
-          </h1>
-        </div>
-      </header>
-
-      {/* ─── Map Area ───────────────────────────────────────────────── */}
-      <div
-        className={`relative shrink-0 transition-all duration-300 ${
-          view === "tracking" && sheetExpanded ? "h-[25vh]" : "h-[45vh]"
-        }`}
-      >
-        <MapContainer
-          center={mapCenter}
-          zoom={13}
-          className="absolute inset-0 w-full h-full"
-          zoomControl={false}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />
-
-          {mapBounds && <MapController bounds={mapBounds} />}
-          {!mapBounds && <MapController center={mapCenter} zoom={13} />}
-
-          {/* User location */}
-          {userLocation && (
-            <>
-              <Circle
-                center={userLocation}
-                radius={100}
-                pathOptions={{
-                  color: "#3b82f6",
-                  fillColor: "#3b82f6",
-                  fillOpacity: 0.1,
-                  weight: 1,
-                }}
-              />
-              <Marker position={userLocation} icon={userIcon}>
-                <Popup>
-                  <span className="text-xs font-medium text-slate-700">
-                    Your location
-                  </span>
-                </Popup>
-              </Marker>
-            </>
-          )}
-
-          {/* Route polyline (preview / tracking) — use OSRM path if available */}
-          {(view === "preview" || view === "tracking") &&
-            selectedRoute &&
-            (selectedRoute.path && selectedRoute.path.length > 1 ? (
-              <Polyline
-                positions={selectedRoute.path}
-                color="#38bdf8"
-                weight={5}
-                opacity={0.9}
-              />
-            ) : selectedRoute.stops?.length > 1 ? (
-              <Polyline
-                positions={selectedRoute.stops.map(
-                  (s) => [s.latitude, s.longitude] as [number, number],
-                )}
-                color="#38bdf8"
-                weight={5}
-                opacity={0.9}
-              />
-            ) : null)}
-
-          {/* Stop markers (preview / tracking) */}
-          {(view === "preview" || view === "tracking") &&
-            selectedRoute?.stops?.map((stop) => (
-              <Marker
-                key={stop._id}
-                position={[stop.latitude, stop.longitude]}
-                icon={stopIcon}
-              >
-                <Popup>
-                  <div className="text-xs">
-                    <div className="font-semibold text-slate-800">
-                      {stop.name}
+          <Marker position={userLocation} icon={userIcon}>
+            <Popup>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>
+                Your location
+              </span>
+            </Popup>
+          </Marker>
+        </>
+      )}
+      {(view === "preview" || view === "tracking") &&
+        selectedRoute &&
+        (selectedRoute.path && selectedRoute.path.length > 1 ? (
+          <Polyline
+            positions={selectedRoute.path}
+            color="#0ea5e9"
+            weight={5}
+            opacity={0.9}
+          />
+        ) : selectedRoute.stops?.length > 1 ? (
+          <Polyline
+            positions={selectedRoute.stops.map(
+              (s) => [s.latitude, s.longitude] as [number, number],
+            )}
+            color="#0ea5e9"
+            weight={5}
+            opacity={0.9}
+          />
+        ) : null)}
+      {(view === "preview" || view === "tracking") &&
+        selectedRoute?.stops?.map((stop) => (
+          <Marker
+            key={stop._id}
+            position={[stop.latitude, stop.longitude]}
+            icon={stopIcon}
+          >
+            <Popup>
+              <div style={{ fontSize: 12 }}>
+                <div style={{ fontWeight: 600 }}>{stop.name}</div>
+                <div style={{ color: "#94a3b8" }}>
+                  Stop #{stop.sequence + 1}
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      {view === "select" &&
+        buses.map((bus, idx) => {
+          const live = getLiveBusLocation(bus._id);
+          if (!live) return null;
+          return (
+            <Marker
+              key={bus._id}
+              position={[live.latitude, live.longitude]}
+              icon={createBusIcon(getBusLabel(idx))}
+              eventHandlers={{ click: () => handleSelectBus(bus) }}
+            >
+              <Popup>
+                <div style={{ fontSize: 12 }}>
+                  <div style={{ fontWeight: 600 }}>{bus.name}</div>
+                  <div style={{ color: "#94a3b8" }}>{getRouteName(bus)}</div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      {(view === "preview" || view === "tracking") &&
+        selectedBus &&
+        (() => {
+          const live = getLiveBusLocation(selectedBus._id);
+          const idx = buses.findIndex((b) => b._id === selectedBus._id);
+          if (!live) return null;
+          return (
+            <Marker
+              position={[live.latitude, live.longitude]}
+              icon={createBusIcon(getBusLabel(idx >= 0 ? idx : 0), true)}
+            >
+              <Popup>
+                <div style={{ fontSize: 12 }}>
+                  <div style={{ fontWeight: 600 }}>{selectedBus.name}</div>
+                  {live.speed && (
+                    <div style={{ color: "#94a3b8" }}>
+                      {Math.round(live.speed)} km/h
                     </div>
-                    <div className="text-slate-500">
-                      Stop #{stop.sequence + 1}
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })()}
+    </MapContainer>
+  );
 
-          {/* Bus markers */}
-          {view === "select" &&
-            buses.map((bus, idx) => {
-              const live = getLiveBusLocation(bus._id);
-              if (!live) return null;
-              return (
-                <Marker
-                  key={bus._id}
-                  position={[live.latitude, live.longitude]}
-                  icon={createBusIcon(getBusLabel(idx))}
-                  eventHandlers={{ click: () => handleSelectBus(bus) }}
-                >
-                  <Popup>
-                    <div className="text-xs">
-                      <div className="font-semibold text-slate-800">
-                        {bus.name}
-                      </div>
-                      <div className="text-slate-500">{getRouteName(bus)}</div>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
+  const panelContent = (
+    <>
+      {view === "select" && (
+        <BusSelectView
+          buses={buses}
+          getRouteName={getRouteName}
+          getLiveBusLocation={getLiveBusLocation}
+          onSelectBus={handleSelectBus}
+        />
+      )}
+      {view === "preview" && selectedRoute && selectedBus && (
+        <RoutePreviewView
+          bus={selectedBus}
+          route={selectedRoute}
+          onViewStops={handleViewStops}
+        />
+      )}
+      {view === "tracking" && selectedRoute && selectedBus && (
+        <ActiveTrackingView
+          bus={selectedBus}
+          route={selectedRoute}
+          getLiveBusLocation={getLiveBusLocation}
+          getDriverInfo={getDriverInfo}
+        />
+      )}
+    </>
+  );
 
-          {/* Selected bus marker */}
-          {(view === "preview" || view === "tracking") &&
-            selectedBus &&
-            (() => {
-              const live = getLiveBusLocation(selectedBus._id);
-              const idx = buses.findIndex((b) => b._id === selectedBus._id);
-              if (!live) return null;
-              return (
-                <Marker
-                  position={[live.latitude, live.longitude]}
-                  icon={createBusIcon(getBusLabel(idx >= 0 ? idx : 0), true)}
-                >
-                  <Popup>
-                    <div className="text-xs">
-                      <div className="font-semibold text-slate-800">
-                        {selectedBus.name}
-                      </div>
-                      {live.speed && (
-                        <div className="text-slate-500">
-                          {Math.round(live.speed)} km/h
-                        </div>
-                      )}
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })()}
-        </MapContainer>
+  const liveBusCount = buses.filter((b) => getLiveBusLocation(b._id)).length;
+
+  const panelHead = (
+    <div className="db-panel-head-row">
+      <div className="db-panel-head-icon">
+        {view === "select" ? (
+          <Radio size={16} color="#6366f1" />
+        ) : view === "preview" ? (
+          <MapPin size={16} color="#6366f1" />
+        ) : (
+          <Navigation size={16} color="#6366f1" />
+        )}
       </div>
-
-      {/* ─── Bottom Sheet ───────────────────────────────────────────── */}
-      <div
-        className={`flex-1 rounded-t-3xl -mt-5 relative z-1001 flex flex-col overflow-hidden`}
-        style={{
-          background: "#ffffff",
-          boxShadow: "0 -8px 32px rgba(99,102,241,0.12)",
-          border: "1.5px solid #e2e8f0",
-          borderBottom: "none",
-        }}
-      >
-        <div
-          className="flex justify-center pt-3 pb-1 cursor-pointer shrink-0"
-          onClick={() => setSheetExpanded(!sheetExpanded)}
-        >
-          <div className="w-10 h-1 bg-slate-200 rounded-full" />
+      <div>
+        <div className="db-panel-head-title">
+          {view === "select"
+            ? "Live Fleet"
+            : view === "preview"
+              ? "Route Preview"
+              : "Live Tracking"}
         </div>
-
-        {/* Sheet content */}
-        <div className="flex-1 overflow-y-auto px-4 pb-6 min-h-0">
-          {view === "select" && (
-            <BusSelectView
-              buses={buses}
-              getRouteName={getRouteName}
-              getLiveBusLocation={getLiveBusLocation}
-              onSelectBus={handleSelectBus}
-            />
-          )}
-
-          {view === "preview" && selectedRoute && selectedBus && (
-            <RoutePreviewView
-              bus={selectedBus}
-              route={selectedRoute}
-              onViewStops={handleViewStops}
-            />
-          )}
-
-          {view === "tracking" && selectedRoute && selectedBus && (
-            <ActiveTrackingView
-              bus={selectedBus}
-              route={selectedRoute}
-              getLiveBusLocation={getLiveBusLocation}
-              getDriverInfo={getDriverInfo}
-            />
-          )}
+        <div className="db-panel-head-sub">
+          {view === "select"
+            ? `${liveBusCount} bus${liveBusCount !== 1 ? "es" : ""} active`
+            : view === "preview" && selectedBus
+              ? selectedBus.name
+              : view === "tracking" && selectedBus
+                ? selectedBus.name
+                : "Safara Transit"}
         </div>
       </div>
+      {view === "select" && liveBusCount > 0 && (
+        <div className="db-live-badge">
+          <div className="db-live-dot" />
+          Live
+        </div>
+      )}
     </div>
+  );
+
+  return (
+    <>
+      <style>{CSS}</style>
+      <div className="db-root">
+        <SidebarDrawer
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          user={user}
+          onLogout={logout}
+        />
+
+        {/* Full-screen map */}
+        <div className="db-map-bg">{mapContent}</div>
+
+        {/* ── Top bar ── */}
+        <header className="db-topbar">
+          {view !== "select" ? (
+            <button
+              className="db-topbar-back-btn"
+              onClick={handleBack}
+              aria-label="Go back"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          ) : (
+            <button
+              className="db-topbar-icon-btn"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu size={18} />
+            </button>
+          )}
+
+          <div className="db-topbar-logo">
+            <div className="db-topbar-logo-icon">
+              <Bus size={16} color="#fff" />
+            </div>
+            <span className="db-topbar-logo-text">Safara</span>
+          </div>
+
+          {view !== "select" && (
+            <span className="db-topbar-subtitle">
+              {view === "preview" ? selectedBus?.name : "Tracking"}
+            </span>
+          )}
+
+          <div className="db-topbar-spacer" />
+
+          <nav className="db-desk-nav">
+            {([
+              { label: "Account", path: "/account", Icon: User },
+              { label: "Notifications", path: "/notifications", Icon: BellIcon },
+              { label: "Settings", path: "/settings", Icon: Settings },
+            ] as const).map(({ label, path, Icon }) => (
+              <button key={path} className="db-desk-nav-btn" onClick={() => navigate(path)}>
+                <Icon size={13} />{label}
+              </button>
+            ))}
+          </nav>
+
+          <button className="db-desk-user-chip" onClick={() => navigate("/account")}>
+            <UserAvatar name={user?.name} avatar={user?.avatar} size="sm" />
+            <span className="db-desk-user-name">{user?.name?.split(" ")[0] ?? "Account"}</span>
+          </button>
+        </header>
+
+        {/* ── Mobile: floating bottom sheet ── */}
+        <div className="db-sheet-wrap">
+          <div
+            className="db-sheet"
+            style={{ maxHeight: sheetExpanded ? "62vh" : "90px" }}
+          >
+            <div
+              className="db-sheet-handle-row"
+              onClick={() => setSheetExpanded(!sheetExpanded)}
+            >
+              <div className="db-sheet-handle" />
+            </div>
+            <div className="db-sheet-body">{panelContent}</div>
+          </div>
+        </div>
+
+        {/* ── Desktop: floating left panel ── */}
+        <div className="db-panel-wrap">
+          <div className="db-panel">
+            <div className="db-panel-head">{panelHead}</div>
+            <div className="db-panel-body">{panelContent}</div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
-// ─── Bus Select View (Screen 1) ─────────────────────────────────────────────
 function BusSelectView({
   buses,
   getRouteName,
@@ -617,96 +921,92 @@ function BusSelectView({
   getLiveBusLocation: (busId: string) => BusLocation | undefined;
   onSelectBus: (bus: BusWithRoute) => void;
 }) {
-  // Split buses into live (active trip) and inactive
   const liveBuses = buses.filter((b) => getLiveBusLocation(b._id));
   const inactiveBuses = buses.filter((b) => !getLiveBusLocation(b._id));
 
-  return (
-    <div className="pb-2 pt-1">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-bold text-slate-900">Select bus</h2>
-        <button className="btn btn-icon" title="Information">
-          <Info className="w-4 h-4 text-slate-500" />
-        </button>
+  if (buses.length === 0) {
+    return (
+      <div className="db-empty">
+        <div className="db-empty-icon">
+          <Bus size={24} color="#6366f1" />
+        </div>
+        <div className="db-empty-title">No buses available</div>
+        <div className="db-empty-sub">Check back later for active routes</div>
       </div>
+    );
+  }
 
-      {buses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-center">
-          <Bus className="w-10 h-10 text-slate-300 mb-3" />
-          <p className="text-sm font-semibold text-slate-700 mb-1">
-            No buses available
-          </p>
-          <p className="text-xs text-slate-400">
-            Check back later for available routes
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {/* Live buses first */}
-          {liveBuses.map((bus) => {
-            const routeName = getRouteName(bus);
-            return (
-              <button
-                key={bus._id}
-                onClick={() => onSelectBus(bus)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-gray-200 hover:bg-gray-100 transition-all text-left"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
-                  <Bus className="w-5 h-5 text-gray-700" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-slate-900 truncate">
-                    {bus.name}
+  return (
+    <div className="db-bus-list">
+      {liveBuses.length > 0 && (
+        <>
+          <div className="db-section-label">On-route now</div>
+          {liveBuses.map((bus) => (
+            <button
+              key={bus._id}
+              className="db-bus-card db-bus-card-live"
+              onClick={() => onSelectBus(bus)}
+            >
+              <div className="db-bus-card-icon">
+                <Bus size={18} color="#6366f1" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="db-bus-name">{bus.name}</div>
+                <div className="db-bus-status-row">
+                  <div className="db-bus-pulse">
+                    <div className="db-bus-pulse-dot" />
+                    <div className="db-bus-pulse-ring" />
                   </div>
-                  <div className="text-xs text-gray-700 font-medium">
-                    Live — On route
-                  </div>
+                  <span className="db-bus-live-label">Live · On route</span>
                 </div>
-                {routeName && (
-                  <span className="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded-lg shrink-0 border border-gray-200">
-                    {routeName}
-                  </span>
-                )}
-                <span className="text-slate-300 shrink-0">›</span>
-              </button>
-            );
-          })}
-
-          {/* Inactive buses */}
-          {inactiveBuses.map((bus) => {
-            const routeName = getRouteName(bus);
-            return (
-              <button
-                key={bus._id}
-                onClick={() => onSelectBus(bus)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-gray-300 hover:bg-gray-100 transition-all text-left"
-              >
-                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                  <Bus className="w-5 h-5 text-slate-400" />
+              </div>
+              {getRouteName(bus) && (
+                <span className="db-bus-route-badge">{getRouteName(bus)}</span>
+              )}
+              <ChevronRight
+                size={15}
+                color="#6366f1"
+                style={{ flexShrink: 0 }}
+              />
+            </button>
+          ))}
+        </>
+      )}
+      {inactiveBuses.length > 0 && (
+        <>
+          <div className="db-section-label">Inactive</div>
+          {inactiveBuses.map((bus) => (
+            <button
+              key={bus._id}
+              className="db-bus-card db-bus-card-inactive"
+              onClick={() => onSelectBus(bus)}
+            >
+              <div className="db-bus-card-icon db-bus-card-icon-inactive">
+                <Bus size={18} color="#334155" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className={`db-bus-name db-bus-name-inactive`}>
+                  {bus.name}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-slate-900 truncate">
-                    {bus.name}
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    Not currently active
-                  </div>
+                <div style={{ fontSize: 12, color: "#334155" }}>
+                  Not currently active
                 </div>
-                {routeName && (
-                  <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-lg shrink-0">
-                    {routeName}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+              </div>
+              {getRouteName(bus) && (
+                <span
+                  className={`db-bus-route-badge db-bus-route-badge-inactive`}
+                >
+                  {getRouteName(bus)}
+                </span>
+              )}
+            </button>
+          ))}
+        </>
       )}
     </div>
   );
 }
 
-// ─── Route Preview View (Screen 2) ──────────────────────────────────────────
 function RoutePreviewView({
   bus,
   route,
@@ -717,93 +1017,119 @@ function RoutePreviewView({
   onViewStops: () => void;
 }) {
   const stops = route.stops || [];
-
   return (
-    <div className="pb-4 pt-1 space-y-4">
-      {/* Bus / Route header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
-          <Bus className="w-5 h-5 text-gray-700" />
+    <div style={{ paddingTop: 8, paddingBottom: 8 }}>
+      <div className="db-preview-head">
+        <div className="db-preview-bus-icon">
+          <Bus size={18} color="#6366f1" />
         </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="text-base font-bold text-slate-900 truncate">
-            {bus.name}
-          </h2>
-          <p className="text-xs text-slate-500 truncate">{route.name}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="db-preview-bus-name">{bus.name}</div>
+          <div className="db-preview-route-name">{route.name}</div>
         </div>
-        <span className="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-lg border border-gray-200 shrink-0">
-          {stops.length} stops
-        </span>
+        <span className="db-stops-badge">{stops.length} stops</span>
       </div>
 
-      {/* Stops timeline */}
       {stops.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-6">
+        <div
+          style={{
+            textAlign: "center",
+            padding: "24px 0",
+            color: "#475569",
+            fontSize: 13,
+          }}
+        >
           No stops on this route
-        </p>
+        </div>
       ) : (
-        <div className="relative ml-5">
-          <div className="relative border-l-2 border-slate-200 space-y-4 pb-2">
-            {stops.map((stop, index) => (
-              <div
-                key={stop._id}
-                className="relative pl-5 flex items-start gap-2"
-              >
-                {/* Dot */}
-                <div
-                  className={`absolute -left-2.25 top-1.5 rounded-full border-2 z-10 ${
-                    index === 0
-                      ? "w-4 h-4 bg-white border-gray-700 ring-4 ring-gray-100"
-                      : index === stops.length - 1
-                        ? "w-4 h-4 bg-gray-800 border-gray-700"
-                        : "w-3 h-3 bg-slate-200 border-slate-300"
-                  }`}
-                />
-                {/* Stop info */}
-                <div className="flex-1 min-w-0">
+        <div className="db-timeline">
+          <div className="db-timeline-line" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {stops.map((stop, index) => {
+              const isFirst = index === 0;
+              const isLast = index === stops.length - 1;
+              const dotSize = isFirst || isLast ? 16 : 12;
+              const dotStyle: React.CSSProperties = {
+                width: dotSize,
+                height: dotSize,
+                background: isFirst ? "#fff" : isLast ? "#ef4444" : "#0ea5e9",
+                border: isFirst
+                  ? "3px solid #6366f1"
+                  : isLast
+                    ? "3px solid #ef4444"
+                    : "2px solid #0ea5e9",
+                boxShadow: isFirst ? "0 0 0 3px rgba(99,102,241,0.15)" : "none",
+                marginLeft: isFirst || isLast ? -1 : 1,
+                marginTop: isFirst || isLast ? 0 : 2,
+              };
+              return (
+                <div key={stop._id} className="db-timeline-row">
                   <div
-                    className={`text-sm font-medium ${
-                      index === 0 || index === stops.length - 1
-                        ? "text-slate-900"
-                        : "text-slate-600"
-                    }`}
+                    className="db-timeline-dot-wrap"
+                    style={{ top: isFirst || isLast ? 4 : 6 }}
                   >
-                    {stop.name}
+                    <div className="db-timeline-dot" style={dotStyle} />
                   </div>
-                  {stop.estimatedArrivalTime && (
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      {stop.estimatedArrivalTime}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      className={
+                        isFirst
+                          ? "db-timeline-name-first"
+                          : isLast
+                            ? "db-timeline-name-last"
+                            : "db-timeline-name"
+                      }
+                    >
+                      {stop.name}
                     </div>
+                    {stop.estimatedArrivalTime && (
+                      <div
+                        style={{
+                          fontSize: 11.5,
+                          color: "#334155",
+                          marginTop: 1,
+                        }}
+                      >
+                        {stop.estimatedArrivalTime}
+                      </div>
+                    )}
+                  </div>
+                  {isFirst && (
+                    <span
+                      className="db-timeline-tag"
+                      style={{
+                        background: "rgba(99,102,241,0.15)",
+                        color: "#a5b4fc",
+                      }}
+                    >
+                      Start
+                    </span>
+                  )}
+                  {isLast && stops.length > 1 && (
+                    <span
+                      className="db-timeline-tag"
+                      style={{
+                        background: "rgba(239,68,68,0.12)",
+                        color: "#f87171",
+                      }}
+                    >
+                      End
+                    </span>
                   )}
                 </div>
-                {index === 0 && (
-                  <span className="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-100 shrink-0">
-                    Start
-                  </span>
-                )}
-                {index === stops.length - 1 && stops.length > 1 && (
-                  <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 shrink-0">
-                    End
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Track button */}
-      <button
-        onClick={onViewStops}
-        className="w-full py-3 rounded-xl bg-gray-800 hover:bg-gray-800 active:bg-gray-800 text-white text-sm font-semibold transition-colors shadow-sm"
-      >
-        Track This Bus
+      <button className="db-track-btn" onClick={onViewStops}>
+        <Zap size={15} /> Track Live
       </button>
     </div>
   );
 }
 
-// ─── Active Tracking View (Screen 3) ────────────────────────────────────────
 function ActiveTrackingView({
   bus,
   route,
@@ -815,303 +1141,252 @@ function ActiveTrackingView({
   getLiveBusLocation: (busId: string) => BusLocation | undefined;
   getDriverInfo: (bus: BusWithRoute) => { name: string; phone?: string } | null;
 }) {
-  const stops = route.stops || [];
-  const live = getLiveBusLocation(bus._id);
-  const driver = getDriverInfo(bus);
-
-  // Determine which stop the bus is at using path-aware progress
-  const currentStopIndex = getCurrentStopIndex(stops, live, route.path);
-
-  // Calculate ETA (rough estimate based on remaining stops)
-  const etaMinutes = estimateETA(stops, currentStopIndex);
-
-  // Reminders state
-  const [reminders, setReminders] = useState<
-    Map<string, { id: string; minutesBefore: number }>
-  >(new Map());
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [reminderPopup, setReminderPopup] = useState<string | null>(null);
   const [reminderMinutes, setReminderMinutes] = useState(5);
   const [savingReminder, setSavingReminder] = useState(false);
 
-  // Load existing reminders for this route
   useEffect(() => {
     loadReminders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route._id]);
+  }, []);
 
   const loadReminders = async () => {
     try {
       const res = await remindersApi.getMyReminders();
-      const data = res.data.data as Array<{
-        _id: string;
-        stopId: { _id: string } | string;
-        routeId: { _id: string } | string;
-        minutesBefore: number;
-        isActive: boolean;
-      }>;
-      const map = new Map<string, { id: string; minutesBefore: number }>();
-      data
-        .filter((r) => {
-          const rRouteId =
-            typeof r.routeId === "object" ? r.routeId._id : r.routeId;
-          return rRouteId === route._id && r.isActive;
-        })
-        .forEach((r) => {
-          const stopId = typeof r.stopId === "object" ? r.stopId._id : r.stopId;
-          map.set(stopId, { id: r._id, minutesBefore: r.minutesBefore });
+      setReminders(res.data.data || []);
+    } catch {}
+  };
+
+  const handleSetReminder = async (stopId: string, minutesBefore: number) => {
+    setSavingReminder(true);
+    try {
+      const existing = reminders.find((r) => {
+        const sId =
+          typeof r.stopId === "object" ? (r.stopId as Stop)._id : r.stopId;
+        return sId === stopId;
+      });
+      if (existing) {
+        await remindersApi.update(existing._id, { minutesBefore });
+      } else {
+        await remindersApi.create({
+          stopId,
+          routeId: route._id,
+          minutesBefore,
         });
-      setReminders(map);
+      }
+      await loadReminders();
+      setReminderPopup(null);
     } catch {
-      // Silently fail
+    } finally {
+      setSavingReminder(false);
     }
   };
 
-  const handleSetReminder = useCallback(
-    async (stopId: string, minutes: number) => {
-      setSavingReminder(true);
-      try {
-        // Check if reminder already exists
-        const existing = reminders.get(stopId);
-        if (existing) {
-          // Update
-          await remindersApi.update(existing.id, { minutesBefore: minutes });
-          setReminders((prev) => {
-            const next = new Map(prev);
-            next.set(stopId, { ...existing, minutesBefore: minutes });
-            return next;
-          });
-        } else {
-          // Create
-          const res = await remindersApi.create({
-            stopId,
-            routeId: route._id,
-            minutesBefore: minutes,
-            notificationType: "push",
-          });
-          const newReminder = res.data.data;
-          setReminders((prev) => {
-            const next = new Map(prev);
-            next.set(stopId, { id: newReminder._id, minutesBefore: minutes });
-            return next;
-          });
-        }
+  const handleRemoveReminder = async (stopId: string) => {
+    try {
+      const existing = reminders.find((r) => {
+        const sId =
+          typeof r.stopId === "object" ? (r.stopId as Stop)._id : r.stopId;
+        return sId === stopId;
+      });
+      if (existing) {
+        await remindersApi.delete(existing._id);
+        await loadReminders();
         setReminderPopup(null);
-      } catch (err) {
-        console.error("Failed to set reminder:", err);
-      } finally {
-        setSavingReminder(false);
       }
-    },
-    [reminders, route._id],
-  );
+    } catch {}
+  };
 
-  const handleRemoveReminder = useCallback(
-    async (stopId: string) => {
-      const existing = reminders.get(stopId);
-      if (!existing) return;
-      try {
-        await remindersApi.delete(existing.id);
-        setReminders((prev) => {
-          const next = new Map(prev);
-          next.delete(stopId);
-          return next;
-        });
-        setReminderPopup(null);
-      } catch (err) {
-        console.error("Failed to remove reminder:", err);
-      }
-    },
-    [reminders],
-  );
+  const busLocation = getLiveBusLocation(bus._id);
+  const driver = getDriverInfo(bus);
+  const stops = route.stops || [];
+  const routePath = route.path;
+  const currentIdx = getCurrentStopIndex(stops, busLocation, routePath);
+  const etaMinutes = estimateETA(stops, currentIdx);
+  const etaDisplay = formatETA(etaMinutes);
 
   return (
-    <div className="pb-2 pt-1 space-y-4">
-      {/* Driver Info Card */}
-      <div className="card flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-          <svg
-            className="w-5 h-5 text-gray-700"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-          </svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-slate-900 truncate">
-            {driver?.name || "Driver"}
+    <div style={{ paddingTop: 8, paddingBottom: 20 }}>
+      {driver && (
+        <div className="db-driver-card">
+          <div>
+            <div className="db-driver-label">Driver</div>
+            <div className="db-driver-name">{driver.name}</div>
           </div>
-          {driver?.phone && (
-            <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
-              <Phone className="w-3 h-3" />
+          {driver.phone && (
+            <a href={`tel:${driver.phone}`} className="db-call-btn">
+              <Phone size={13} />
               {driver.phone}
-            </div>
+            </a>
           )}
-          <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-lg mt-1 font-medium border border-gray-200">
-            {bus.name}
-          </span>
         </div>
-        <div className="text-right shrink-0">
-          <div className="text-xs text-slate-400">Next stop in</div>
-          <div className="text-lg font-mono font-bold text-gray-700">
-            {formatETA(etaMinutes)}
+      )}
+
+      <div className="db-eta-card">
+        <div style={{ flex: 1 }}>
+          <div className="db-eta-label">Estimated Arrival</div>
+          <div className="db-eta-time">{etaDisplay}</div>
+          <div className="db-eta-hint">
+            {etaMinutes === 0 ? "Arriving now" : `~${etaMinutes} min away`}
           </div>
         </div>
+        {busLocation?.speed != null && (
+          <div className="db-speed-chip">
+            <div className="db-speed-val">{Math.round(busLocation.speed)}</div>
+            <div className="db-speed-unit">km/h</div>
+          </div>
+        )}
       </div>
 
-      {/* Route Timeline */}
-      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-        {bus.name} - Route
-      </h3>
-
-      <div className="relative ml-5">
-        <div className="relative border-l-2 border-slate-200 space-y-4 pb-4">
-          {/* Progress line overlay */}
-          {stops.length > 1 && (
-            <div
-              className="absolute -left-px top-0 w-0.5 bg-gray-1000 transition-all duration-500"
-              style={{
-                height: `${
-                  (currentStopIndex / Math.max(stops.length - 1, 1)) * 100
-                }%`,
-                zIndex: 1,
-              }}
-            />
-          )}
-
-          {stops.map((stop, index) => {
-            const isPassed = index < currentStopIndex;
-            const isCurrent = index === currentStopIndex;
-            const hasReminder = reminders.has(stop._id);
-            const reminderData = reminders.get(stop._id);
-
-            return (
-              <div
-                key={stop._id}
-                className="relative pl-5 flex items-start gap-2"
-              >
-                {/* Dot */}
+      <div className="db-stops-label">Stops</div>
+      <div>
+        {stops.map((stop, index) => {
+          const isCurrent = index === currentIdx;
+          const isPassed = index < currentIdx;
+          const reminderData = reminders.find((r) => {
+            const sId =
+              typeof r.stopId === "object" ? (r.stopId as Stop)._id : r.stopId;
+            return sId === stop._id;
+          });
+          const hasReminder = !!reminderData;
+          return (
+            <div key={stop._id} className="db-stop-row">
+              <div className="db-stop-spine">
                 <div
-                  className={`absolute -left-2.25 top-1.5 rounded-full border-2 z-10 ${
+                  className={
                     isCurrent
-                      ? "w-4 h-4 bg-white border-gray-700 ring-4 ring-gray-100"
+                      ? "db-stop-dot-current"
                       : isPassed
-                        ? "w-4 h-4 bg-gray-800 border-gray-700"
-                        : "w-3 h-3 bg-slate-200 border-slate-200"
-                  }`}
+                        ? "db-stop-dot-passed"
+                        : "db-stop-dot-future"
+                  }
                 />
-
-                {/* Stop info */}
-                <div className="flex-1 min-w-0">
+                {index < stops.length - 1 && (
                   <div
-                    className={`font-semibold text-sm ${
-                      isCurrent
-                        ? "text-slate-900"
-                        : isPassed
-                          ? "text-slate-400"
-                          : "text-slate-700"
-                    }`}
-                  >
-                    {stop.name}
-                  </div>
-                  {hasReminder && (
-                    <div className="text-xs text-gray-600 mt-0.5">
-                      🔔 Alert {reminderData?.minutesBefore} min before
-                    </div>
-                  )}
-                  {stop.estimatedArrivalTime && (
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      ETA: {stop.estimatedArrivalTime}
-                    </div>
-                  )}
-                </div>
-
-                {/* Reminder bell button */}
-                {!isPassed && (
-                  <div className="relative shrink-0">
-                    <button
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        hasReminder
-                          ? "bg-gray-100 text-gray-1000 hover:bg-gray-100"
-                          : "text-slate-300 hover:bg-slate-100 hover:text-slate-500"
-                      }`}
-                      title={hasReminder ? "Edit reminder" : "Set reminder"}
-                      onClick={() => {
-                        if (reminderPopup === stop._id) {
-                          setReminderPopup(null);
-                        } else {
-                          setReminderMinutes(reminderData?.minutesBefore || 5);
-                          setReminderPopup(stop._id);
-                        }
-                      }}
+                    className={
+                      isPassed ? "db-stop-line-passed" : "db-stop-line-future"
+                    }
+                  />
+                )}
+              </div>
+              <div className="db-stop-content">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 8,
+                  }}
+                >
+                  <div>
+                    <div
+                      className={
+                        isCurrent
+                          ? "db-stop-name-current"
+                          : isPassed
+                            ? "db-stop-name-passed"
+                            : "db-stop-name-future"
+                      }
                     >
-                      <BellIcon className="w-4 h-4" />
-                    </button>
-
-                    {/* Reminder popup */}
-                    {reminderPopup === stop._id && (
-                      <div className="absolute right-0 top-8 w-56 bg-white rounded-xl shadow-lg border border-slate-200 p-3 z-1000">
-                        <div className="text-sm font-bold text-slate-900 mb-1">
-                          Set Alert
-                        </div>
-                        <p className="text-xs text-slate-500 mb-3">
-                          Get notified when the bus is approaching this stop.
-                        </p>
-                        <label className="text-xs font-medium text-slate-600 mb-2 block">
-                          Minutes before arrival
-                        </label>
-                        <div className="grid grid-cols-4 gap-1 mb-3">
-                          {[2, 5, 10, 15].map((m) => (
-                            <button
-                              key={m}
-                              onClick={() => setReminderMinutes(m)}
-                              className={`py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                                reminderMinutes === m
-                                  ? "bg-gray-800 text-white"
-                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                              }`}
-                            >
-                              {m} min
-                            </button>
-                          ))}
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() =>
-                              handleSetReminder(stop._id, reminderMinutes)
-                            }
-                            disabled={savingReminder}
-                            className="btn btn-primary btn-sm flex-1 text-xs disabled:opacity-60"
-                          >
-                            {savingReminder
-                              ? "Saving..."
-                              : hasReminder
-                                ? "Update"
-                                : "Set Alert"}
-                          </button>
-                          {hasReminder && (
-                            <button
-                              onClick={() => handleRemoveReminder(stop._id)}
-                              className="btn btn-danger btn-sm flex-1 text-xs"
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </div>
+                      {stop.name}
+                    </div>
+                    {isCurrent && (
+                      <div className="db-stop-here-tag">Bus is here</div>
+                    )}
+                    {hasReminder && (
+                      <div className="db-stop-reminder-tag">
+                        Alert {reminderData?.minutesBefore} min before
+                      </div>
+                    )}
+                    {stop.estimatedArrivalTime && (
+                      <div className="db-stop-eta-tag">
+                        ETA: {stop.estimatedArrivalTime}
                       </div>
                     )}
                   </div>
-                )}
+                  {!isPassed && (
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <button
+                        onClick={() => {
+                          if (reminderPopup === stop._id)
+                            setReminderPopup(null);
+                          else {
+                            setReminderMinutes(
+                              reminderData?.minutesBefore || 5,
+                            );
+                            setReminderPopup(stop._id);
+                          }
+                        }}
+                        title={hasReminder ? "Edit reminder" : "Set reminder"}
+                        className={`db-bell-btn ${hasReminder ? "db-bell-btn-active" : "db-bell-btn-idle"}`}
+                      >
+                        <BellIcon size={14} />
+                      </button>
+                      {reminderPopup === stop._id && (
+                        <div className="db-reminder-popup">
+                          <div className="db-reminder-title">Set Alert</div>
+                          <div className="db-reminder-sub">
+                            Notify when bus is approaching this stop.
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "#475569",
+                              marginBottom: 8,
+                            }}
+                          >
+                            Minutes before arrival
+                          </div>
+                          <div className="db-reminder-opts">
+                            {[2, 5, 10, 15].map((m) => (
+                              <button
+                                key={m}
+                                onClick={() => setReminderMinutes(m)}
+                                className={`db-reminder-opt-btn ${reminderMinutes === m ? "db-reminder-opt-active" : "db-reminder-opt-idle"}`}
+                              >
+                                {m}m
+                              </button>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                              onClick={() =>
+                                handleSetReminder(stop._id, reminderMinutes)
+                              }
+                              disabled={savingReminder}
+                              className="db-reminder-save-btn"
+                              style={{ opacity: savingReminder ? 0.7 : 1 }}
+                            >
+                              {savingReminder
+                                ? "Saving..."
+                                : hasReminder
+                                  ? "Update"
+                                  : "Set Alert"}
+                            </button>
+                            {hasReminder && (
+                              <button
+                                onClick={() => handleRemoveReminder(stop._id)}
+                                className="db-reminder-remove-btn"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// ─── Sidebar Drawer ──────────────────────────────────────────────────────────
 function SidebarDrawer({
   open,
   onClose,
@@ -1124,7 +1399,6 @@ function SidebarDrawer({
   onLogout: () => void;
 }) {
   const navigate = useNavigate();
-
   const menuItems = [
     { icon: User, label: "My Account", path: "/account" },
     { icon: BellIcon, label: "Notifications", path: "/notifications" },
@@ -1132,111 +1406,66 @@ function SidebarDrawer({
     { icon: HelpCircle, label: "Help & Support", path: "/help" },
     { icon: Shield, label: "Privacy Policy", path: "/privacy" },
   ];
-
   return (
     <>
-      {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/40 z-1002 transition-opacity duration-300 ${
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className="db-sidebar-overlay"
         onClick={onClose}
+        style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
       />
-
-      {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 bottom-0 w-70 bg-white z-1003 shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className="db-sidebar"
+        style={{ transform: open ? "translateX(0)" : "translateX(-100%)" }}
       >
-        {/* Header / Profile area */}
-        <div
-          className="px-5 pt-12 pb-6 text-white relative"
-          style={{
-            background: "linear-gradient(160deg, #111827 0%, #111827 100%)",
-          }}
-        >
-          <button
-            title="Close Sidebar"
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-          >
-            <X className="w-4 h-4" />
+        <div className="db-sidebar-hero">
+          <button className="db-sidebar-close" onClick={onClose}>
+            <X size={16} />
           </button>
-
-          <UserAvatar
-            name={user?.name}
-            avatar={user?.avatar}
-            size="lg"
-            className="ring-2 ring-white/30"
-          />
-          <div className="text-base font-semibold mt-3">
-            {user?.name || "User"}
-          </div>
-          <div
-            className="text-xs mt-0.5"
-            style={{ color: "rgba(204,251,241,0.85)" }}
-          >
-            {user?.email}
-          </div>
-          <div className="mt-2">
-            <span className="inline-block bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-medium capitalize">
-              {user?.role || "Rider"}
-            </span>
-          </div>
+          <UserAvatar name={user?.name} avatar={user?.avatar} size="lg" />
+          <div className="db-sidebar-name">{user?.name || "User"}</div>
+          <div className="db-sidebar-email">{user?.email}</div>
+          <span className="db-sidebar-role">{user?.role || "Rider"}</span>
         </div>
-
-        {/* Menu items */}
-        <nav className="flex-1 py-2 overflow-y-auto">
+        <nav className="db-sidebar-nav">
           {menuItems.map(({ icon: Icon, label, path }) => (
             <button
               key={path}
+              className="db-sidebar-item"
               onClick={() => {
                 navigate(path);
                 onClose();
               }}
-              className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-slate-50 text-slate-700 transition-colors"
             >
-              <Icon className="w-5 h-5 text-slate-500" />
-              <span className="flex-1 text-sm font-medium">{label}</span>
-              <ChevronRight className="w-4 h-4 text-slate-300" />
+              <Icon size={17} color="#334155" />
+              <span className="db-sidebar-item-label">{label}</span>
+              <ChevronRight size={14} color="#1e293b" />
             </button>
           ))}
         </nav>
-
-        {/* Logout */}
-        <div className="border-t border-slate-100 p-4">
+        <div className="db-sidebar-footer">
           <button
-            title="Logout"
+            className="db-sidebar-logout"
             onClick={() => {
               onLogout();
               onClose();
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Log out</span>
+            <LogOut size={16} />
+            <span>Log out</span>
           </button>
         </div>
-
-        {/* App version */}
-        <div className="px-5 py-3 border-t border-slate-100">
-          <span className="text-xs text-slate-400">BusTrack v1.0.0</span>
-        </div>
+        <div className="db-sidebar-version">Safara v1.0.0</div>
       </div>
     </>
   );
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Find the index of the closest point in an array of coordinates */
 function findClosestPointIndex(
   path: [number, number][],
   pos: [number, number],
 ): number {
-  let minDist = Infinity;
-  let closestIdx = 0;
+  let minDist = Infinity,
+    closestIdx = 0;
   for (let i = 0; i < path.length; i++) {
     const dist = haversineDistance(pos[0], pos[1], path[i][0], path[i][1]);
     if (dist < minDist) {
@@ -1247,29 +1476,18 @@ function findClosestPointIndex(
   return closestIdx;
 }
 
-/**
- * Determine which stop the bus is currently at / approaching.
- * Uses route path (OSRM) when available for accurate directional progress.
- * Falls back to proximity-based approach otherwise.
- */
 function getCurrentStopIndex(
   stops: Stop[],
   busLocation?: BusLocation,
   routePath?: [number, number][],
 ): number {
   if (!busLocation || stops.length === 0) return 0;
-
   const busPos: [number, number] = [
     busLocation.latitude,
     busLocation.longitude,
   ];
-
-  // ── Path-based progress (accurate, uses route direction) ───────────
   if (routePath && routePath.length > 1) {
-    // Where is the bus along the path?
     const busPathIdx = findClosestPointIndex(routePath, busPos);
-
-    // For each stop, find where it sits on the path
     let currentStopIdx = 0;
     for (let i = 0; i < stops.length; i++) {
       const stopPathIdx = findClosestPointIndex(routePath, [
@@ -1282,25 +1500,15 @@ function getCurrentStopIndex(
         stops[i].latitude,
         stops[i].longitude,
       );
-
       if (busPathIdx > stopPathIdx && distToStop > 200) {
-        // Bus is past this stop on the route AND far enough away
         currentStopIdx = Math.min(i + 1, stops.length - 1);
-      } else {
-        // Bus hasn't reached this stop yet (or is right at it)
-        break;
-      }
+      } else break;
     }
     return currentStopIdx;
   }
-
-  // ── Fallback: proximity-based (no path data) ──────────────────────
-  // Only consider a stop "passed" if the bus is close enough to be on-route
-  const NEAR_THRESHOLD = 500; // metres
-
-  let closestIndex = 0;
-  let minDist = Infinity;
-
+  const NEAR_THRESHOLD = 500;
+  let closestIndex = 0,
+    minDist = Infinity;
   stops.forEach((stop, index) => {
     const dist = haversineDistance(
       busLocation.latitude,
@@ -1313,10 +1521,7 @@ function getCurrentStopIndex(
       closestIndex = index;
     }
   });
-
-  // If the bus is far from ALL stops, assume it hasn't reached stop 0 yet
   if (minDist > NEAR_THRESHOLD) return 0;
-
   return closestIndex;
 }
 
@@ -1328,8 +1533,8 @@ function haversineDistance(
 ): number {
   const R = 6371e3;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
+  const dLat = toRad(lat2 - lat1),
+    dLon = toRad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
@@ -1337,13 +1542,11 @@ function haversineDistance(
 }
 
 function estimateETA(stops: Stop[], currentIndex: number): number {
-  // Rough estimate: ~3 minutes per stop remaining
-  const remaining = Math.max(0, stops.length - 1 - currentIndex);
-  return remaining * 3;
+  return Math.max(0, stops.length - 1 - currentIndex) * 3;
 }
 
 function formatETA(minutes: number): string {
-  const hrs = Math.floor(minutes / 60);
-  const mins = minutes % 60;
+  const hrs = Math.floor(minutes / 60),
+    mins = minutes % 60;
   return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
