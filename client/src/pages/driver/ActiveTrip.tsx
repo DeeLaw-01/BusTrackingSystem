@@ -33,7 +33,7 @@ const CSS = `
   @keyframes at-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
   /* â”€â”€ Root: full screen â”€â”€ */
-  .at-root { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: #f5f7fa; }
+  .at-root { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; overflow: hidden; background: #f5f7fa; }
 
   /* â”€â”€ Top bar â”€â”€ */
   .at-topbar {

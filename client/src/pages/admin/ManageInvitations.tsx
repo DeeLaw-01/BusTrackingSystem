@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import "./admin.css";
 import { adminApi } from "@/services/api";
 import {
   Mail,
@@ -280,6 +281,8 @@ export default function AdminManageInvitations() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
         }}
       >
         <div>
@@ -302,7 +305,7 @@ export default function AdminManageInvitations() {
               Invitations
             </span>
           </div>
-          <div style={{ display: "flex", gap: 36 }}>
+          <div style={{ display: "flex", gap: 36, flexWrap: "wrap" }}>
             {[
               {
                 value: invitations.length,
@@ -396,7 +399,7 @@ export default function AdminManageInvitations() {
         </div>
         <form
           onSubmit={handleSendInvitation}
-          style={{ display: "flex", gap: 10 }}
+          style={{ display: "flex", gap: 10, flexWrap: "wrap" }}
         >
           <div
             style={{

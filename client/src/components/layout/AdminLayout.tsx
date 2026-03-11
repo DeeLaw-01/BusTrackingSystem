@@ -1,4 +1,5 @@
 ﻿import { Outlet, Link, useLocation } from "react-router-dom";
+import "../../pages/admin/admin.css";
 import {
   Bus,
   LayoutDashboard,
@@ -457,7 +458,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, overflowY: "auto", padding: "26px 28px" }}>
+        <main className="admin-main" style={{ flex: 1, overflowY: "auto" }}>
           <Outlet />
         </main>
       </div>

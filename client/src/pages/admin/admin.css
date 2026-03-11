@@ -1,0 +1,63 @@
+/* ─── Admin responsive utilities ─── */
+
+/* ─── Main layout ─── */
+.admin-main {
+  padding: 26px 28px;
+}
+
+/* ─── Grid layouts (desktop defaults) ─── */
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.admin-3-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.admin-map-grid {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+}
+.admin-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.bus-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ─── Tablet (≤1023px) ─── */
+@media (max-width: 1023px) {
+  .admin-main {
+    padding: 20px;
+  }
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .admin-3-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .admin-map-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ─── Mobile (≤640px) ─── */
+@media (max-width: 640px) {
+  .admin-main {
+    padding: 14px 16px;
+  }
+  .admin-3-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-quick-grid {
+    grid-template-columns: 1fr;
+  }
+  .bus-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

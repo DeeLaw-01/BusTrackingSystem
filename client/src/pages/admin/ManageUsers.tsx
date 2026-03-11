@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useRef } from "react";
+import "./admin.css";
 import type { User, UserRole } from "@/types";
 type Role = UserRole;
 import UserAvatar from "@/components/ui/UserAvatar";
@@ -515,7 +516,7 @@ export default function AdminManageUsers() {
 
         {/* ── Members table ── */}
         {tab === "all" && (
-          <div ref={tableRef}>
+          <div ref={tableRef} style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr
